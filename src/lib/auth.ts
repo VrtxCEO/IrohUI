@@ -1,5 +1,5 @@
 /**
- * auth.ts — Vortex account auth + IrohOS session management
+ * auth.ts — Vortex account auth + EyroOS session management
  *
  * Web app auth  → POST /api/auth/login  (Vortex Next.js app)
  * OS session    → derived from QR binding payload, stored in localStorage
@@ -81,8 +81,8 @@ export async function registerUser(
 
 const TOKEN_KEY   = 'vortex_token'
 const USER_KEY    = 'vortex_user'
-const SESSION_KEY = 'iroh_session'
-const OB_KEY      = 'iroh_ob_data'
+const SESSION_KEY = 'eyro_session'
+const OB_KEY      = 'eyro_ob_data'
 
 export function storeToken(token: string, user: AuthUser): void {
   localStorage.setItem(TOKEN_KEY, token)

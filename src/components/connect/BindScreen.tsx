@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IrohEye } from '../eye/IrohEye'
+import { EyroEye } from '../eye/EyroEye'
 import {
   parseBindPayload, isBindPayloadExpired, deriveConnectionToken,
   fetchBindingStatus, storeSession,
@@ -92,13 +92,13 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#060810' }}>
       <div className="ob-eye-bg">
-        <IrohEye state={state === 'success' ? 'capability' : state === 'waiting' ? 'processing' : 'idle'} size={420} />
+        <EyroEye state={state === 'success' ? 'capability' : state === 'waiting' ? 'processing' : 'idle'} size={420} />
       </div>
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
             <div className="ob-logo-mark">I</div>
-            <div className="ob-logo-name">iroh<span>OS</span></div>
+            <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 
           {state === 'checking' && (
@@ -108,7 +108,7 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
           {state === 'expired' && (
             <>
               <div className="ob-title" style={{ color: 'var(--warn)' }}>QR code expired</div>
-              <div className="ob-sub">Go to your IrohOS and generate a new QR code. The 6-digit code resets each time.</div>
+              <div className="ob-sub">Go to your EyroOS and generate a new QR code. The 6-digit code resets each time.</div>
               <button className="btn-secondary" style={{ marginTop: 16 }} onClick={onExpired}>← Back</button>
             </>
           )}
@@ -124,7 +124,7 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
             <>
               <div className="ob-title" style={{ color: 'var(--accent)' }}>Bound successfully</div>
               <div className="ob-sub" style={{ textAlign: 'center' }}>
-                Your IrohOS is now linked to <strong style={{ color: 'var(--text-1)' }}>{user.email}</strong>
+                Your EyroOS is now linked to <strong style={{ color: 'var(--text-1)' }}>{user.email}</strong>
               </div>
               <div style={{ fontSize: 32, textAlign: 'center', marginTop: 20 }}>✓</div>
             </>
@@ -133,8 +133,8 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
           {(state === 'ready' || state === 'waiting') && payload && (
             <>
               <div className="ob-eyebrow">Binding code</div>
-              <div className="ob-title">Enter this on your IrohOS</div>
-              <div className="ob-sub">When your IrohOS prompts for a code, enter the number below.</div>
+              <div className="ob-title">Enter this on your EyroOS</div>
+              <div className="ob-sub">When your EyroOS prompts for a code, enter the number below.</div>
 
               <div className="bind-code">
                 {digits.map((d, i) => (
@@ -153,7 +153,7 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
               {state === 'ready' && (
                 <>
                   <div className="ob-sub" style={{ marginTop: 12 }}>
-                    Once you've entered the code in IrohOS, tap confirm.
+                    Once you've entered the code in EyroOS, tap confirm.
                   </div>
                   <button
                     className="btn-primary"

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { OnboardingData, RiskLevel, AuthOption } from '../../types'
-import { IrohEye } from '../eye/IrohEye'
+import { EyroEye } from '../eye/EyroEye'
 import '../components.css'
 
 interface Props { onLaunch: (data: OnboardingData) => void }
@@ -42,13 +42,13 @@ export function OnboardingScreen({ onLaunch }: Props) {
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#060810' }}>
       <div className="ob-eye-bg">
-        <IrohEye state="idle" size={420} />
+        <EyroEye state="idle" size={420} />
       </div>
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
             <div className="ob-logo-mark">I</div>
-            <div className="ob-logo-name">iroh<span>OS</span></div>
+            <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 
           <div className="ob-step-indicator">
@@ -59,7 +59,7 @@ export function OnboardingScreen({ onLaunch }: Props) {
             <>
               <div className="ob-eyebrow">Step 1 of 4</div>
               <div className="ob-title">Create your OS identity</div>
-              <div className="ob-sub">This is your sovereign identity inside Iroh. Only you control it.</div>
+              <div className="ob-sub">This is your sovereign identity inside Eyro. Only you control it.</div>
               <div className="field">
                 <div className="field-label">Username</div>
                 <input className="field-input" type="text" placeholder="e.g. don_vortex"
@@ -67,7 +67,7 @@ export function OnboardingScreen({ onLaunch }: Props) {
               </div>
               <div className="field">
                 <div className="field-label">Agent name <span className="field-optional">what will you call your agent?</span></div>
-                <input className="field-input" type="text" placeholder="e.g. Iroh, Atlas, Nova…"
+                <input className="field-input" type="text" placeholder="e.g. Eyro, Atlas, Nova…"
                   value={data.agentName} onChange={e => set('agentName', e.target.value)} />
                 {data.agentName.trim() && (
                   <div className="field-hint">
@@ -106,13 +106,13 @@ export function OnboardingScreen({ onLaunch }: Props) {
             <>
               <div className="ob-eyebrow">Step 2 of 4</div>
               <div className="ob-title">Connect intelligence backends</div>
-              <div className="ob-sub">Iroh thinks with one model and learns with another. Both are under your control.</div>
+              <div className="ob-sub">Eyro thinks with one model and learns with another. Both are under your control.</div>
               <div className="brain-block">
                 <div className="brain-header">
                   <div className="brain-icon" style={{ background: 'rgba(0,200,150,0.12)' }}>🧠</div>
                   <div>
                     <div className="brain-name">Main LLM — Primary Brain</div>
-                    <div className="brain-role">Iroh's reasoning and action engine</div>
+                    <div className="brain-role">Eyro's reasoning and action engine</div>
                   </div>
                 </div>
                 <div className="field" style={{ marginBottom: 10 }}>
@@ -157,12 +157,12 @@ export function OnboardingScreen({ onLaunch }: Props) {
               <div className="ob-sub">Optional but recommended. Glove wraps every AI action in a governance and audit layer.</div>
               <div className="glove-card">
                 <div className="glove-badge">🛡 ENDPOINT GOVERNANCE</div>
-                <div className="glove-title">Glove for IrohOS</div>
-                <div className="glove-desc">Every action Iroh takes gets hash-chained, audited, and governed under your rules. Full AI on your terms.</div>
+                <div className="glove-title">Glove for EyroOS</div>
+                <div className="glove-desc">Every action Eyro takes gets hash-chained, audited, and governed under your rules. Full AI on your terms.</div>
                 <div className="glove-price">
                   <span className="glove-price-new">$4.99<span style={{ fontSize: 13, fontWeight: 500 }}>/mo</span></span>
                   <span className="glove-price-old">$9.99</span>
-                  <span className="glove-price-tag">50% off for Iroh users</span>
+                  <span className="glove-price-tag">50% off for Eyro users</span>
                 </div>
                 <div className="glove-btns">
                   <button className="btn-accent-outline" onClick={() => { set('gloveConnected', true); setStep(4) }}>Connect Glove</button>
@@ -176,7 +176,7 @@ export function OnboardingScreen({ onLaunch }: Props) {
           {step === 4 && (
             <>
               <div className="ob-eyebrow">Step 4 of 4</div>
-              <div className="ob-title">Define how Iroh acts</div>
+              <div className="ob-title">Define how Eyro acts</div>
               <div className="ob-sub">Set authentication requirements for each risk tier. You can change these anytime in Settings.</div>
 
               {([1, 2, 3] as RiskLevel[]).map(risk => (
@@ -219,8 +219,8 @@ export function OnboardingScreen({ onLaunch }: Props) {
           {step === 5 && (
             <>
               <div className="ob-eyebrow">Step 5 of 5</div>
-              <div className="ob-title">Access Iroh anywhere</div>
-              <div className="ob-sub">IrohOS runs on your PC or server. If you want to use it on the go from a phone or browser, you'll need to connect your installation to the web app.</div>
+              <div className="ob-title">Access Eyro anywhere</div>
+              <div className="ob-sub">EyroOS runs on your PC or server. If you want to use it on the go from a phone or browser, you'll need to connect your installation to the web app.</div>
 
               <div className="conn-option-card">
                 <div className="conn-option-header">
@@ -245,10 +245,10 @@ export function OnboardingScreen({ onLaunch }: Props) {
               </div>
 
               <div style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'center', margin: '12px 0 4px', lineHeight: 1.6 }}>
-                When you're ready, tap the <strong style={{ color: 'var(--text-2)' }}>Connections</strong> button at the top of the app and choose your mode. Iroh will walk you through the setup.
+                When you're ready, tap the <strong style={{ color: 'var(--text-2)' }}>Connections</strong> button at the top of the app and choose your mode. Eyro will walk you through the setup.
               </div>
 
-              <button className="btn-primary" style={{ marginTop: 8 }} onClick={() => onLaunch(data)}>Launch IrohOS →</button>
+              <button className="btn-primary" style={{ marginTop: 8 }} onClick={() => onLaunch(data)}>Launch EyroOS →</button>
               <button className="btn-secondary" onClick={() => setStep(4)}>← Back</button>
             </>
           )}

@@ -7,8 +7,8 @@ import { TasksView } from '../views/TasksView'
 import { WorkspaceView } from '../views/WorkspaceView'
 import { FoundryView } from '../views/FoundryView'
 import { VaultView } from '../views/VaultView'
-import { useIrohWS } from '../../lib/useIrohWS'
-import { IrohEye } from '../eye/IrohEye'
+import { useEyroWS } from '../../lib/useEyroWS'
+import { EyroEye } from '../eye/EyroEye'
 import '../components.css'
 
 interface Props { user: AuthUser; session: OsSession }
@@ -17,7 +17,7 @@ function nowTime() { return new Date().toTimeString().slice(0, 5) }
 function uid() { return Math.random().toString(36).slice(2) }
 
 export function ShellScreen({ user, session }: Props) {
-  const agentName   = 'Iroh'
+  const agentName   = 'Eyro'
   const userInitial = (user.name ?? user.email).charAt(0).toUpperCase()
   const channelId   = useMemo(() => session.os_instance_id, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -37,7 +37,7 @@ export function ShellScreen({ user, session }: Props) {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
-  const { send, busy: isBusy } = useIrohWS({
+  const { send, busy: isBusy } = useEyroWS({
     channelId,
     onReply(reply) {
       setMessages(m => [...m, {
@@ -113,7 +113,7 @@ export function ShellScreen({ user, session }: Props) {
                     direct: 'thefoundry/brain/systems/sys.connectivity.direct-api.md',
                     webrtc: 'thefoundry/brain/systems/sys.connectivity.webrtc.md',
                   }
-                  handleSend(`I want to set up ${opt.name} to connect my web app to IrohOS. Read the setup guide at ${pages[opt.id]} and walk me through it step by step.`)
+                  handleSend(`I want to set up ${opt.name} to connect my web app to EyroOS. Read the setup guide at ${pages[opt.id]} and walk me through it step by step.`)
                 }}>
                   <div className="conn-option-row">
                     <span className="conn-option-name">{opt.name}</span>
@@ -129,7 +129,7 @@ export function ShellScreen({ user, session }: Props) {
         <div className="h-center">
           <div className="ctx-pill">
             <div className={`ctx-dot ${isBusy ? 'run' : 'idle'}`} />
-            IrohOS Dev
+            EyroOS Dev
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.4 }}>
               <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
@@ -141,7 +141,7 @@ export function ShellScreen({ user, session }: Props) {
       {/* Eye background — home view only */}
       {activeView === 'home' && (
         <div className={`shell-eye-bg ${isBusy ? 'active' : ''}`}>
-          <IrohEye state={isBusy ? 'processing' : 'idle'} size={320} />
+          <EyroEye state={isBusy ? 'processing' : 'idle'} size={320} />
         </div>
       )}
 

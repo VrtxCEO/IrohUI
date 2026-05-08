@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IrohEye } from '../eye/IrohEye'
+import { EyroEye } from '../eye/EyroEye'
 import { loginUser, registerUser, storeToken } from '../../lib/auth'
 import type { AuthUser } from '../../lib/auth'
 import '../components.css'
@@ -42,13 +42,13 @@ export function LoginScreen({ onLogin }: Props) {
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#060810' }}>
       <div className="ob-eye-bg">
-        <IrohEye state="idle" size={420} />
+        <EyroEye state="idle" size={420} />
       </div>
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
             <div className="ob-logo-mark">I</div>
-            <div className="ob-logo-name">iroh<span>OS</span></div>
+            <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 
           <div className="login-tabs">
@@ -100,7 +100,7 @@ export function LoginScreen({ onLogin }: Props) {
           </form>
 
           <div className="login-footer">
-            Use the same email &amp; password you set during IrohOS setup.
+            Use the same email &amp; password you set during EyroOS setup.
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { usePoll } from '../../lib/useIrohWS'
+import { usePoll } from '../../lib/useEyroWS'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 
@@ -38,7 +38,7 @@ export function TasksView() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div className="content-panel">
         <div className="panel-title">Tasks</div>
-        <div className="panel-sub">What Iroh is doing and has done. Start tasks by talking to Iroh on Home.</div>
+        <div className="panel-sub">What Eyro is doing and has done. Start tasks by talking to Eyro on Home.</div>
 
         {error && (
           <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: "'JetBrains Mono',monospace", marginBottom: 12 }}>
@@ -48,7 +48,7 @@ export function TasksView() {
 
         {!error && tasks.length === 0 && (
           <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 24, textAlign: 'center' }}>
-            No tasks yet. Ask Iroh to do something on Home.
+            No tasks yet. Ask Eyro to do something on Home.
           </div>
         )}
 

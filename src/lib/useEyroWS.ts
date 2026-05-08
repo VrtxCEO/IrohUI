@@ -1,5 +1,5 @@
 /**
- * useIrohWS — WebSocket hook for IrohOS API.
+ * useEyroWS — WebSocket hook for EyroOS API.
  *
  * Manages the connection lifecycle, automatic reconnect, and message routing.
  * The caller gets a stable `send` function and `connected`/`busy` state.
@@ -11,20 +11,20 @@ import { getSession, getStoredUser } from './auth'
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 const WS_BASE  = API_BASE.replace(/^http/, 'ws')
 
-export interface IrohReply {
+export interface EyroReply {
   text: string
   trace: TraceEntry[]
   taskId: string | null
 }
 
-interface UseIrohWSOptions {
+interface UseEyroWSOptions {
   channelId: string
-  onReply: (reply: IrohReply) => void
+  onReply: (reply: EyroReply) => void
   onError?: (detail: string) => void
   onBusy?: () => void
 }
 
-export function useIrohWS({ channelId, onReply, onError, onBusy }: UseIrohWSOptions) {
+export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOptions) {
   const wsRef        = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef   = useRef(true)

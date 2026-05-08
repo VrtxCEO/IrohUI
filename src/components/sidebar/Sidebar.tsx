@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { SidebarTab } from '../../types'
-import { usePoll } from '../../lib/useIrohWS'
+import { usePoll } from '../../lib/useEyroWS'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 
@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
             </div>
           ))}
           <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: "'JetBrains Mono',monospace", padding: '4px 2px' }}>
-            Tools are sourced from The Forge. Iroh will request new capabilities as needed.
+            Tools are sourced from The Forge. Eyro will request new capabilities as needed.
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
             )
           })}
           <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: "'JetBrains Mono',monospace", padding: '4px 2px', marginTop: 4 }}>
-            Smiths are specialized subagents. Iroh delegates complex tasks to the right Smith.
+            Smiths are specialized subagents. Eyro delegates complex tasks to the right Smith.
           </div>
         </div>
 
@@ -180,10 +180,10 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
               </div>
             ))}
           </div>
-          <div className="s-label" style={{ marginTop: 8 }}>What Iroh learned this week</div>
+          <div className="s-label" style={{ marginTop: 8 }}>What Eyro learned this week</div>
           {[
             { title: 'Adapter patterns', body: 'Typed interfaces consistently reduce downstream errors. Now a default strategy for all adapter-layer work.' },
-            { title: 'Scope discipline', body: 'Iroh correctly escalated 4 out of 4 out-of-scope actions this week — sandbox boundaries are stable.' },
+            { title: 'Scope discipline', body: 'Eyro correctly escalated 4 out of 4 out-of-scope actions this week — sandbox boundaries are stable.' },
             { title: 'Context switching', body: 'Transitions between projects have zero cross-contamination across 31 sessions.' },
           ].map(c => (
             <div key={c.title} className="learn-card">

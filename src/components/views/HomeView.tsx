@@ -87,7 +87,7 @@ export function HomeView({ agentName, userInitial, messages, onSend, isBusy }: P
         ) : (
           messages.map(msg => (
             <div key={msg.id} className="msg-wrap">
-              <div className={`msg-avatar ${msg.role === 'assistant' ? 'iroh' : 'user'}`}>
+              <div className={`msg-avatar ${msg.role === 'assistant' ? 'eyro' : 'user'}`}>
                 {msg.role === 'assistant' ? agentName.charAt(0).toUpperCase() : userInitial}
               </div>
               <div className="msg-body">
@@ -103,7 +103,7 @@ export function HomeView({ agentName, userInitial, messages, onSend, isBusy }: P
         )}
         {isBusy && messages.length > 0 && (
           <div className="msg-wrap">
-            <div className="msg-avatar iroh">{agentName.charAt(0).toUpperCase()}</div>
+            <div className="msg-avatar eyro">{agentName.charAt(0).toUpperCase()}</div>
             <div className="msg-body">
               <div className="msg-name">{agentName} <span className="msg-ts">{nowTime()}</span></div>
               <div className="msg-text" style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>thinking…</div>
@@ -139,7 +139,7 @@ export function HomeView({ agentName, userInitial, messages, onSend, isBusy }: P
               Trace on
             </div>
             <div className="input-sep"/>
-            <div className="input-footer-btn">IrohOS Dev</div>
+            <div className="input-footer-btn">EyroOS Dev</div>
             <span style={{ marginLeft: 'auto' }}>⇧ Enter for new line</span>
           </div>
         </div>

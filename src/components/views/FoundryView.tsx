@@ -1,4 +1,4 @@
-import { usePoll } from '../../lib/useIrohWS'
+import { usePoll } from '../../lib/useEyroWS'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 
@@ -22,7 +22,7 @@ export function FoundryView() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div className="content-panel">
         <div className="panel-title">The Foundry</div>
-        <div className="panel-sub">Your agent's knowledge layer. Iroh builds and refines this over time.</div>
+        <div className="panel-sub">Your agent's knowledge layer. Eyro builds and refines this over time.</div>
 
         <div className="section-label">Knowledge Base</div>
         <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 12 }}>

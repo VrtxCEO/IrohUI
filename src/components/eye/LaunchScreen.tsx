@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IrohEye } from './IrohEye'
+import { EyroEye } from './EyroEye'
 
 interface Props { onComplete: () => void }
 
@@ -15,7 +15,7 @@ export function LaunchScreen({ onComplete }: Props) {
 
   return (
     <div className={`launch-screen launch-${phase}`}>
-      <IrohEye state="idle" size={260} />
+      <EyroEye state="idle" size={260} />
     </div>
   )
 }
