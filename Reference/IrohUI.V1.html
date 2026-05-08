@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IrohOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#08090c;--bg-2:#0d0f14;--bg-3:#13151c;--bg-4:#1a1d27;
+  --border:rgba(255,255,255,0.07);--border-hi:rgba(255,255,255,0.13);
+  --accent:#00c896;--blue:#4f8fff;--warn:#f5a623;--red:#ff4f4f;--purple:#a855f7;
+  --text-1:#eef0f5;--text-2:#7e8699;--text-3:#3e4459;
+  --header-h:54px;--bottom-nav-h:60px;--sidebar-w:300px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text-1);font-family:'Figtree',sans-serif;font-size:14px;overflow:hidden;}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* ═══════════════════════════════════════
+   ONBOARDING
+═══════════════════════════════════════ */
+.ob-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:24px;overflow-y:auto;
+  background:var(--bg);
+  position:relative;
+}
+/* subtle radial glow */
+.ob-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,150,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.ob-card{
+  width:100%;max-width:460px;
+  background:var(--bg-2);border:1px solid var(--border);
+  border-radius:20px;padding:40px 36px;
+  position:relative;z-index:1;
+  animation:fadeUp 0.45s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.ob-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
+.ob-logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#000;
+}
+.ob-logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;}
+.ob-logo-name span{color:var(--accent);}
+
+.ob-step-indicator{display:flex;gap:6px;margin-bottom:28px;}
+.ob-step-dot{
+  height:3px;border-radius:2px;flex:1;
+  background:var(--bg-4);transition:background 0.3s;
+}
+.ob-step-dot.done{background:var(--accent);}
+.ob-step-dot.active{background:var(--accent);opacity:0.5;}
+
+.ob-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;
+}
+.ob-title{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text-1);margin-bottom:6px;line-height:1.2;}
+.ob-sub{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:28px;}
+
+/* fields */
+.field{margin-bottom:14px;}
+.field-label{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.field-optional{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;font-weight:400;}
+.field-input{
+  width:100%;background:var(--bg-3);border:1px solid var(--border);
+  border-radius:10px;color:var(--text-1);
+  font-family:'Figtree',sans-serif;font-size:14px;
+  padding:11px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.field-input::placeholder{color:var(--text-3);}
+.field-input:focus{border-color:rgba(0,200,150,0.4);box-shadow:0 0 0 3px rgba(0,200,150,0.06);}
+.field-hint{font-size:11px;color:var(--text-3);margin-top:5px;font-family:'JetBrains Mono',monospace;}
+
+/* two-col */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* section divider */
+.ob-divider{
+  display:flex;align-items:center;gap:10px;
+  margin:20px 0 16px;
+}
+.ob-divider-line{flex:1;height:1px;background:var(--border);}
+.ob-divider-label{font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+
+/* brain block */
+.brain-block{
+  background:var(--bg-3);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:12px;
+}
+.brain-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.brain-icon{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.brain-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.brain-role{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+
+/* glove card */
+.glove-card{
+  background:linear-gradient(135deg,rgba(79,143,255,0.08),rgba(168,85,247,0.08));
+  border:1px solid rgba(79,143,255,0.2);
+  border-radius:14px;padding:20px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.glove-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,79,79,0.12);border:1px solid rgba(255,79,79,0.2);
+  border-radius:6px;padding:3px 10px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--red);letter-spacing:0.08em;width:fit-content;
+}
+.glove-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text-1);}
+.glove-desc{font-size:12.5px;color:var(--text-2);line-height:1.6;}
+.glove-price{
+  display:flex;align-items:baseline;gap:8px;
+}
+.glove-price-new{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--accent);}
+.glove-price-old{font-size:13px;color:var(--text-3);text-decoration:line-through;}
+.glove-price-tag{font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;}
+.glove-btns{display:flex;gap:8px;}
+
+/* risk levels */
+.risk-block{
+  background:var(--bg-3);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:10px;
+}
+.risk-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.risk-badge{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  padding:3px 8px;border-radius:5px;letter-spacing:0.06em;font-weight:500;
+}
+.risk-1{background:rgba(0,200,150,0.12);color:var(--accent);}
+.risk-2{background:rgba(245,166,35,0.12);color:var(--warn);}
+.risk-3{background:rgba(255,79,79,0.12);color:var(--red);}
+.risk-title{font-size:13px;font-weight:600;color:var(--text-1);}
+.risk-examples{font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;}
+.risk-auth-label{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;}
+.risk-auth-options{display:flex;flex-wrap:wrap;gap:6px;}
+.risk-opt{
+  padding:5px 12px;border-radius:20px;
+  font-size:11px;font-family:'JetBrains Mono',monospace;
+  border:1px solid var(--border);color:var(--text-3);cursor:pointer;
+  transition:all 0.15s;user-select:none;
+}
+.risk-opt:hover{border-color:var(--border-hi);color:var(--text-2);}
+.risk-opt.selected{border-color:var(--accent);color:var(--accent);background:rgba(0,200,150,0.08);}
+.risk-opt.locked{border-color:rgba(255,79,79,0.3);color:var(--red);background:rgba(255,79,79,0.06);cursor:default;}
+.risk-note{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:8px;}
+
+/* buttons */
+.btn-primary{
+  width:100%;padding:13px;border-radius:11px;
+  background:var(--accent);border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#000;
+  transition:opacity 0.15s,transform 0.1s;margin-top:8px;
+}
+.btn-primary:hover{opacity:0.88;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-secondary{
+  width:100%;padding:13px;border-radius:11px;
+  background:var(--bg-3);border:1px solid var(--border);cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--text-2);
+  transition:all 0.15s;margin-top:6px;
+}
+.btn-secondary:hover{border-color:var(--border-hi);color:var(--text-1);}
+.btn-outline{
+  flex:1;padding:11px;border-radius:10px;
+  background:transparent;border:1px solid var(--border);cursor:pointer;
+  font-family:'Figtree',sans-serif;font-weight:500;font-size:13px;color:var(--text-2);
+  transition:all 0.15s;
+}
+.btn-outline:hover{border-color:var(--border-hi);color:var(--text-1);}
+.btn-accent-outline{
+  flex:1;padding:11px;border-radius:10px;
+  background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.3);cursor:pointer;
+  font-family:'Figtree',sans-serif;font-weight:600;font-size:13px;color:var(--accent);
+  transition:all 0.15s;
+}
+.btn-accent-outline:hover{background:rgba(0,200,150,0.14);}
+
+/* ═══════════════════════════════════════
+   MAIN SHELL
+═══════════════════════════════════════ */
+
+/* OVERLAY */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  z-index:30;opacity:0;pointer-events:none;
+  transition:opacity 0.3s;backdrop-filter:blur(2px);
+}
+.overlay.open{opacity:1;pointer-events:all;}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;
+  width:var(--sidebar-w);background:var(--bg-2);
+  border-right:1px solid var(--border);
+  z-index:40;transform:translateX(-100%);
+  transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;
+}
+.sidebar.open{transform:translateX(0);}
+.sidebar-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:var(--header-h);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#000;
+}
+.logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:0.03em;}
+.logo-name span{color:var(--accent);}
+.close-btn{
+  background:none;border:none;cursor:pointer;color:var(--text-2);
+  padding:6px;border-radius:6px;transition:color 0.15s,background 0.15s;
+  display:flex;align-items:center;
+}
+.close-btn:hover{color:var(--text-1);background:var(--bg-3);}
+
+.sidebar-tabs{
+  display:flex;padding:0 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;overflow-x:auto;
+}
+.sidebar-tabs::-webkit-scrollbar{display:none;}
+.s-tab{
+  padding:12px 10px 11px;
+  font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-3);cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color 0.15s,border-color 0.15s;
+  font-family:'JetBrains Mono',monospace;
+}
+.s-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.s-tab:hover:not(.active){color:var(--text-2);}
+
+.sidebar-body{flex:1;overflow-y:auto;padding:16px;min-height:0;}
+.sidebar-body::-webkit-scrollbar{width:4px;}
+.sidebar-body::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:4px;}
+
+.s-panel{display:none;flex-direction:column;gap:8px;}
+.s-panel.active{display:flex;}
+.s-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);padding:4px 0 2px;}
+
+/* trace */
+.trace-entry{background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:5px;}
+.trace-entry.new{border-color:rgba(0,200,150,0.25);background:rgba(0,200,150,0.04);}
+.trace-top{display:flex;align-items:center;gap:7px;}
+.t-tag{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;letter-spacing:0.06em;font-weight:500;}
+.tt-decide{background:rgba(0,200,150,0.12);color:var(--accent);}
+.tt-action{background:rgba(79,143,255,0.12);color:var(--blue);}
+.tt-observe{background:rgba(245,166,35,0.12);color:var(--warn);}
+.tt-escalate{background:rgba(255,79,79,0.12);color:var(--red);}
+.tt-complete{background:rgba(255,255,255,0.06);color:var(--text-2);}
+.t-id{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);margin-left:auto;}
+.t-msg{font-size:11.5px;color:var(--text-1);line-height:1.5;}
+.t-reason{font-size:10.5px;color:var(--text-2);font-style:italic;border-left:2px solid var(--bg-4);padding-left:8px;line-height:1.5;}
+.t-meta{display:flex;gap:8px;}
+.t-meta span{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);}
+
+/* tool card */
+.tool-card{background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.tool-top{display:flex;align-items:flex-start;gap:10px;}
+.tool-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.tool-info{flex:1;}
+.tool-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.tool-desc{font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.4;}
+.tool-bottom{display:flex;align-items:center;gap:8px;}
+.tool-risk{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;}
+.toggle-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.toggle{width:32px;height:18px;border-radius:9px;background:var(--bg-4);border:1px solid var(--border);cursor:pointer;position:relative;transition:background 0.2s;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.2s;}
+.toggle.on::after{left:16px;}
+.toggle-label{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;}
+
+/* workspace */
+.file-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color 0.15s;}
+.file-row:hover{border-color:var(--border-hi);}
+.file-icon{font-size:15px;flex-shrink:0;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:12.5px;font-weight:500;color:var(--text-1);}
+.file-meta{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:1px;}
+
+/* growth */
+.growth-stat{background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.growth-stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--text-1);}
+.growth-stat-label{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:3px;}
+.growth-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.learn-card{background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.learn-title{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:6px;}
+.learn-body{font-size:11.5px;color:var(--text-2);line-height:1.6;}
+
+/* settings */
+.setting-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color 0.15s;}
+.setting-row:hover{border-color:var(--border-hi);}
+.setting-icon{width:30px;height:30px;border-radius:8px;background:var(--bg-4);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.setting-info{flex:1;}
+.setting-name{font-size:13px;font-weight:500;color:var(--text-1);}
+.setting-desc{font-size:11px;color:var(--text-3);margin-top:1px;}
+.setting-arrow{color:var(--text-3);}
+
+/* ── MAIN HEADER ── */
+.main-header{
+  height:var(--header-h);display:flex;align-items:center;
+  padding:0 20px;gap:14px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg-2);flex-shrink:0;z-index:10;
+}
+.burger{background:none;border:none;cursor:pointer;color:var(--text-2);padding:7px;border-radius:8px;transition:color 0.15s,background 0.15s;display:flex;align-items:center;flex-shrink:0;}
+.burger:hover{color:var(--text-1);background:var(--bg-3);}
+.h-logo{display:flex;align-items:center;gap:8px;}
+.h-logo-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;}
+.h-logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+.h-logo-name span{color:var(--accent);}
+.h-center{flex:1;display:flex;justify-content:center;}
+.ctx-pill{display:flex;align-items:center;gap:7px;padding:5px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:border-color 0.15s;font-size:12px;color:var(--text-2);}
+.ctx-pill:hover{border-color:var(--border-hi);color:var(--text-1);}
+.ctx-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ctx-dot.run{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s infinite;}
+.ctx-dot.idle{background:var(--text-3);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b4fff,#a855f7);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  height:var(--bottom-nav-h);
+  display:flex;align-items:center;
+  background:var(--bg-2);border-top:1px solid var(--border);
+  flex-shrink:0;padding:0 8px;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;padding:8px 4px;
+  color:var(--text-3);transition:color 0.15s;
+  border-radius:10px;
+}
+.nav-item:hover{color:var(--text-2);}
+.nav-item.active{color:var(--accent);}
+.nav-item svg{flex-shrink:0;}
+.nav-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
+
+/* ── CHAT/HOME ── */
+.chat-area{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
+.chat-area::-webkit-scrollbar{width:4px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:4px;}
+
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;animation:fadeUp 0.5s both;}
+.empty-logo-mark{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:#000;}
+.empty-title{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:var(--text-1);text-align:center;}
+.empty-sub{font-size:14px;color:var(--text-2);text-align:center;max-width:360px;line-height:1.6;}
+.suggestion-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px;}
+.suggestion{padding:8px 16px;background:var(--bg-3);border:1px solid var(--border);border-radius:20px;font-size:12.5px;color:var(--text-2);cursor:pointer;transition:all 0.15s;}
+.suggestion:hover{border-color:var(--accent);color:var(--text-1);background:rgba(0,200,150,0.06);}
+
+.msg-wrap{display:flex;padding:14px 24px;gap:14px;animation:fadeUp 0.3s both;max-width:800px;margin:0 auto;width:100%;}
+.msg-wrap:hover{background:rgba(255,255,255,0.012);}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px;}
+.msg-avatar.iroh{background:linear-gradient(135deg,var(--accent),var(--blue));color:#000;font-family:'Syne',sans-serif;font-weight:800;}
+.msg-avatar.user{background:linear-gradient(135deg,#3b4fff,#a855f7);color:#fff;font-weight:600;}
+.msg-body{flex:1;min-width:0;}
+.msg-name{font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:5px;display:flex;align-items:center;gap:8px;}
+.msg-name .ts{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);font-weight:400;}
+.msg-text{font-size:14px;line-height:1.75;color:var(--text-1);}
+.msg-trace{margin-top:10px;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.msg-trace-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);user-select:none;transition:color 0.15s;}
+.msg-trace-header:hover{color:var(--text-2);}
+.msg-trace-body{padding:0 12px 10px;display:none;}
+.msg-trace-body.open{display:block;}
+.msg-trace-line{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-2);line-height:1.6;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.msg-trace-line:last-child{border-bottom:none;}
+.trace-arrow{margin-left:auto;transition:transform 0.2s;}
+.trace-arrow.open{transform:rotate(180deg);}
+
+/* ── CONTENT PANEL (tasks/tools/workspace/growth) ── */
+.content-panel{flex:1;overflow-y:auto;padding:20px 24px;min-height:0;}
+.content-panel::-webkit-scrollbar{width:4px;}
+.content-panel::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:4px;}
+.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--text-1);margin-bottom:4px;}
+.panel-sub{font-size:13px;color:var(--text-2);margin-bottom:20px;}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;margin-top:4px;}
+
+/* task card */
+.task-card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.task-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.task-name{font-size:13px;font-weight:600;color:var(--text-1);flex:1;}
+.task-status{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;}
+.ts-running{background:rgba(0,200,150,0.12);color:var(--accent);}
+.ts-done{background:rgba(255,255,255,0.06);color:var(--text-2);}
+.task-steps{display:flex;flex-direction:column;gap:4px;}
+.task-step{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2);}
+.step-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.step-dot.done{background:var(--accent);}
+.step-dot.pending{background:var(--text-3);}
+.step-dot.active{background:var(--warn);animation:pulse 1.5s infinite;}
+.task-meta{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.task-meta span{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-3);}
+
+/* ── INPUT BAR ── */
+.input-bar{padding:12px 24px 16px;flex-shrink:0;}
+.input-inner{max-width:760px;margin:0 auto;background:var(--bg-3);border:1px solid var(--border-hi);border-radius:14px;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;}
+.input-inner:focus-within{border-color:rgba(0,200,150,0.4);box-shadow:0 0 0 3px rgba(0,200,150,0.06);}
+.input-top{display:flex;align-items:flex-end;}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text-1);font-family:'Figtree',sans-serif;font-size:14px;line-height:1.6;padding:14px 16px;resize:none;min-height:50px;max-height:180px;}
+textarea::placeholder{color:var(--text-3);}
+.send-btn{margin:10px 10px 10px 0;width:34px;height:34px;border-radius:9px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s,transform 0.1s;}
+.send-btn:hover{opacity:0.85;}
+.send-btn:active{transform:scale(0.93);}
+.input-footer{display:flex;align-items:center;gap:8px;padding:0 14px 10px;font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;}
+.input-footer-btn{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;background:var(--bg-4);border:1px solid var(--border);cursor:pointer;font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;transition:color 0.15s;}
+.input-footer-btn:hover{color:var(--text-1);}
+.input-sep{width:1px;height:12px;background:var(--border);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:4px;}
+
+/* ── VAULT AUTH MODAL ── */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:24px;backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+.modal-backdrop.open{opacity:1;pointer-events:all;}
+.modal-card{
+  width:100%;max-width:380px;
+  background:var(--bg-2);border:1px solid var(--border-hi);
+  border-radius:20px;padding:32px 28px;
+  animation:fadeUp 0.3s both;
+  position:relative;
+}
+.modal-lock-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,79,79,0.15),rgba(245,166,35,0.1));
+  border:1px solid rgba(255,79,79,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin:0 auto 20px;
+}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:19px;color:var(--text-1);text-align:center;margin-bottom:6px;}
+.modal-sub{font-size:12.5px;color:var(--text-2);text-align:center;line-height:1.6;margin-bottom:24px;}
+.modal-auth-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.modal-auth-step{display:flex;flex-direction:column;gap:6px;}
+.modal-auth-label{font-size:11px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.modal-auth-label .step-num{
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(255,79,79,0.15);border:1px solid rgba(255,79,79,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--red);font-weight:600;
+}
+.modal-input{
+  width:100%;background:var(--bg-3);border:1px solid var(--border);
+  border-radius:10px;color:var(--text-1);
+  font-family:'Figtree',sans-serif;font-size:14px;
+  padding:11px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+  letter-spacing:0.08em;
+}
+.modal-input::placeholder{color:var(--text-3);letter-spacing:0;}
+.modal-input:focus{border-color:rgba(255,79,79,0.4);box-shadow:0 0 0 3px rgba(255,79,79,0.06);}
+.modal-error{
+  font-size:11px;color:var(--red);font-family:'JetBrains Mono',monospace;
+  text-align:center;min-height:16px;margin-bottom:4px;
+}
+.btn-vault-unlock{
+  width:100%;padding:13px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(255,79,79,0.9),rgba(245,166,35,0.8));
+  border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;
+  transition:opacity 0.15s,transform 0.1s;
+}
+.btn-vault-unlock:hover{opacity:0.88;}
+.btn-vault-unlock:active{transform:scale(0.98);}
+.btn-vault-cancel{
+  width:100%;padding:11px;border-radius:11px;margin-top:8px;
+  background:none;border:1px solid var(--border);cursor:pointer;
+  font-family:'Figtree',sans-serif;font-weight:500;font-size:13px;color:var(--text-2);
+  transition:all 0.15s;
+}
+.btn-vault-cancel:hover{border-color:var(--border-hi);color:var(--text-1);}
+
+/* vault session banner */
+.vault-banner{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;
+  background:rgba(255,79,79,0.06);border-bottom:1px solid rgba(255,79,79,0.15);
+  flex-shrink:0;
+}
+.vault-banner-dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite;}
+.vault-banner-text{font-size:12px;color:var(--text-2);flex:1;}
+.vault-banner-text strong{color:var(--red);font-weight:600;}
+.vault-lock-btn{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  padding:4px 10px;border-radius:6px;
+  background:rgba(255,79,79,0.1);border:1px solid rgba(255,79,79,0.2);
+  color:var(--red);cursor:pointer;transition:background 0.15s;
+}
+.vault-lock-btn:hover{background:rgba(255,79,79,0.18);}
+
+/* vault file rows */
+.vault-file-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:var(--bg-2);
+  border:1px solid var(--border);border-radius:10px;
+  margin-bottom:8px;cursor:pointer;transition:border-color 0.15s;
+}
+.vault-file-row:hover{border-color:rgba(255,79,79,0.25);}
+.vault-file-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(255,79,79,0.08);border:1px solid rgba(255,79,79,0.15);
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+}
+.vault-file-info{flex:1;min-width:0;}
+.vault-file-name{font-size:12.5px;font-weight:500;color:var(--text-1);}
+.vault-file-meta{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.vault-enc-badge{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  padding:2px 6px;border-radius:4px;
+  background:rgba(0,200,150,0.1);color:var(--accent);flex-shrink:0;
+}
+.vault-locked-overlay{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;gap:16px;padding:40px 24px;
+}
+.vault-locked-icon{
+  width:64px;height:64px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,79,79,0.12),rgba(245,166,35,0.08));
+  border:1px solid rgba(255,79,79,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+}
+.vault-locked-title{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--text-1);text-align:center;}
+.vault-locked-sub{font-size:13px;color:var(--text-2);text-align:center;max-width:300px;line-height:1.6;}
+.vault-locked-detail{
+  background:var(--bg-2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;width:100%;max-width:320px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.vault-locked-detail-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2);}
+.vault-locked-detail-row svg{flex-shrink:0;color:var(--text-3);}
+.btn-vault-open{
+  padding:12px 28px;border-radius:11px;
+  background:linear-gradient(135deg,rgba(255,79,79,0.85),rgba(245,166,35,0.7));
+  border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;
+  transition:opacity 0.15s,transform 0.1s;
+}
+.btn-vault-open:hover{opacity:0.88;}
+.btn-vault-open:active{transform:scale(0.97);}
+.vault-nav-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--red);position:absolute;top:4px;right:4px;
+  box-shadow:0 0 5px var(--red);
+  display:none;
+}
+.vault-nav-dot.visible{display:block;}
+/* ── AGENT PERSONALITY ── */
+.personality-card{
+  background:var(--bg-3);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+}
+.personality-agent-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 14px 12px;border-bottom:1px solid var(--border);
+}
+.personality-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#000;
+  flex-shrink:0;transition:background 0.3s;
+}
+.personality-agent-info{flex:1;min-width:0;}
+.personality-agent-name{font-size:14px;font-weight:600;color:var(--text-1);}
+.personality-agent-tagline{font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.personality-body{padding:14px;display:flex;flex-direction:column;gap:12px;}
+
+.p-field-label{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:5px;}
+.p-input{
+  width:100%;background:var(--bg-4);border:1px solid var(--border);
+  border-radius:8px;color:var(--text-1);
+  font-family:'Figtree',sans-serif;font-size:13px;
+  padding:9px 12px;outline:none;transition:border-color 0.2s;
+}
+.p-input::placeholder{color:var(--text-3);}
+.p-input:focus{border-color:rgba(0,200,150,0.35);}
+.p-textarea{
+  width:100%;background:var(--bg-4);border:1px solid var(--border);
+  border-radius:8px;color:var(--text-1);
+  font-family:'Figtree',sans-serif;font-size:13px;line-height:1.5;
+  padding:9px 12px;outline:none;resize:none;
+  transition:border-color 0.2s;min-height:72px;
+}
+.p-textarea::placeholder{color:var(--text-3);}
+.p-textarea:focus{border-color:rgba(0,200,150,0.35);}
+
+.tone-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.tone-chip{
+  padding:7px 10px;border-radius:8px;
+  border:1px solid var(--border);background:var(--bg-4);
+  font-size:11.5px;color:var(--text-3);cursor:pointer;
+  transition:all 0.15s;text-align:center;user-select:none;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.tone-chip:hover{border-color:var(--border-hi);color:var(--text-2);}
+.tone-chip.selected{border-color:var(--accent);color:var(--accent);background:rgba(0,200,150,0.07);}
+
+.p-divider{height:1px;background:var(--border);margin:2px 0;}
+
+.trait-row{display:flex;align-items:center;gap:10px;}
+.trait-label{font-size:12px;color:var(--text-2);flex:1;}
+.trait-slider{
+  -webkit-appearance:none;appearance:none;
+  width:90px;height:3px;border-radius:2px;
+  background:linear-gradient(to right,var(--accent) 50%,var(--bg-4) 50%);
+  outline:none;cursor:pointer;
+}
+.trait-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;
+  border-radius:50%;background:var(--accent);
+  border:2px solid var(--bg-2);cursor:pointer;
+}
+.trait-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);width:20px;text-align:right;}
+
+.p-save-btn{
+  width:100%;padding:10px;border-radius:9px;
+  background:var(--accent);border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#000;
+  transition:opacity 0.15s;
+}
+.p-save-btn:hover{opacity:0.85;}
+.p-save-confirm{
+  font-size:10px;color:var(--accent);font-family:'JetBrains Mono',monospace;
+  text-align:center;min-height:14px;transition:opacity 0.3s;opacity:0;
+}
+.p-save-confirm.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     SCREEN: ONBOARDING
+═══════════════════════════════════ -->
+<div class="screen active" id="screen-onboarding">
+  <div class="ob-wrap">
+    <div class="ob-card" id="ob-card">
+
+      <!-- STEP 1: OS IDENTITY -->
+      <div id="ob-step-1">
+        <div class="ob-logo">
+          <div class="ob-logo-mark">I</div>
+          <div class="ob-logo-name">iroh<span>OS</span></div>
+        </div>
+        <div class="ob-step-indicator">
+          <div class="ob-step-dot active"></div>
+          <div class="ob-step-dot"></div>
+          <div class="ob-step-dot"></div>
+          <div class="ob-step-dot"></div>
+        </div>
+        <div class="ob-eyebrow">Step 1 of 4</div>
+        <div class="ob-title">Create your OS identity</div>
+        <div class="ob-sub">This is your sovereign identity inside Iroh. Only you control it.</div>
+
+        <div class="field">
+          <div class="field-label">Username</div>
+          <input class="field-input" type="text" placeholder="e.g. don_vortex" id="ob-username"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Agent name <span class="field-optional">what will you call your agent?</span></div>
+          <input class="field-input" type="text" placeholder="e.g. Iroh, Atlas, Nova…" id="ob-agentname" oninput="previewAgentName(this.value)"/>
+          <div class="field-hint" id="agent-name-preview" style="margin-top:6px;display:none;">
+            <span style="color:var(--text-2);">Your agent will introduce itself as </span>
+            <span id="agent-name-preview-val" style="color:var(--accent);font-weight:600;"></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Agent phone number <span class="field-optional">optional</span></div>
+          <input class="field-input" type="tel" placeholder="+1 (555) 000-0000" id="ob-agentphone"/>
+          <div class="field-hint">Your agent can use this number to send texts and make calls.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Password</div>
+          <input class="field-input" type="password" placeholder="Strong password"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Phone number <span class="field-optional">for 2FA</span></div>
+          <input class="field-input" type="tel" placeholder="+1 (555) 000-0000"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Crypto wallet <span class="field-optional">optional</span></div>
+          <input class="field-input" type="text" placeholder="Solana wallet address"/>
+          <div class="field-hint">Used for on-chain identity and Vortex-Global integration.</div>
+        </div>
+
+        <button class="btn-primary" onclick="goStep(2)">Continue →</button>
+      </div>
+
+      <!-- STEP 2: INTELLIGENCE BACKENDS -->
+      <div id="ob-step-2" style="display:none;">
+        <div class="ob-step-indicator">
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot active"></div>
+          <div class="ob-step-dot"></div>
+          <div class="ob-step-dot"></div>
+        </div>
+        <div class="ob-eyebrow">Step 2 of 4</div>
+        <div class="ob-title">Connect intelligence backends</div>
+        <div class="ob-sub">Iroh thinks with one model and learns with another. Both are under your control.</div>
+
+        <div class="brain-block">
+          <div class="brain-header">
+            <div class="brain-icon" style="background:rgba(0,200,150,0.12);">🧠</div>
+            <div>
+              <div class="brain-name">Main LLM — Primary Brain</div>
+              <div class="brain-role">Iroh's reasoning and action engine</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <div class="field-label">API Key</div>
+            <input class="field-input" type="password" placeholder="sk-ant-..."/>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <div class="field-label">Backup API Key <span class="field-optional">optional</span></div>
+            <input class="field-input" type="password" placeholder="Fallback key if primary fails"/>
+          </div>
+        </div>
+
+        <div class="brain-block">
+          <div class="brain-header">
+            <div class="brain-icon" style="background:rgba(79,143,255,0.12);">🎓</div>
+            <div>
+              <div class="brain-name">Tutor LLM — Meta-Brain</div>
+              <div class="brain-role">Grades decisions, builds operational priors</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <div class="field-label">Tutor API Key</div>
+            <input class="field-input" type="password" placeholder="sk-ant-..."/>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <div class="field-label">Tutor Backup Key <span class="field-optional">optional</span></div>
+            <input class="field-input" type="password" placeholder="Fallback tutor key"/>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="goStep(3)">Continue →</button>
+        <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+      </div>
+
+      <!-- STEP 3: GLOVE INTEGRATION -->
+      <div id="ob-step-3" style="display:none;">
+        <div class="ob-step-indicator">
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot active"></div>
+          <div class="ob-step-dot"></div>
+        </div>
+        <div class="ob-eyebrow">Step 3 of 4</div>
+        <div class="ob-title">Enhance with Glove</div>
+        <div class="ob-sub">Optional but recommended. Glove wraps every AI action in a governance and audit layer.</div>
+
+        <div class="glove-card">
+          <div class="glove-badge">🛡 ENDPOINT GOVERNANCE</div>
+          <div class="glove-title">Glove for IrohOS</div>
+          <div class="glove-desc">Every action Iroh takes gets hash-chained, audited, and governed under your rules. Full AI on your terms.</div>
+          <div class="glove-price">
+            <span class="glove-price-new">$4.99<span style="font-size:13px;font-weight:500;">/mo</span></span>
+            <span class="glove-price-old">$9.99</span>
+            <span class="glove-price-tag">50% off for Iroh users</span>
+          </div>
+          <div class="glove-btns">
+            <button class="btn-accent-outline" onclick="goStep(4)">Connect Glove</button>
+            <button class="btn-outline" onclick="goStep(4)">Skip for now</button>
+          </div>
+        </div>
+
+        <button class="btn-secondary" style="margin-top:14px;" onclick="goStep(2)">← Back</button>
+      </div>
+
+      <!-- STEP 4: SECURITY SETUP -->
+      <div id="ob-step-4" style="display:none;">
+        <div class="ob-step-indicator">
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot done"></div>
+          <div class="ob-step-dot active"></div>
+        </div>
+        <div class="ob-eyebrow">Step 4 of 4</div>
+        <div class="ob-title">Define how Iroh acts</div>
+        <div class="ob-sub">Set authentication requirements for each risk tier. You can change these anytime in Settings.</div>
+
+        <!-- Risk 1 -->
+        <div class="risk-block">
+          <div class="risk-header">
+            <span class="risk-badge risk-1">RISK LEVEL 1</span>
+            <span class="risk-title">Low Risk</span>
+          </div>
+          <div class="risk-examples">Read-only tools, local analysis, harmless automations.</div>
+          <div class="risk-auth-label">Authentication required <span style="font-size:10px;color:var(--text-3);font-weight:400;">select any combination</span></div>
+          <div class="risk-auth-options">
+            <div class="risk-opt selected" onclick="toggleNone(this,'r1')">None</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r1')">PIN</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r1')">Password</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r1')">2FA</div>
+          </div>
+        </div>
+
+        <!-- Risk 2 -->
+        <div class="risk-block">
+          <div class="risk-header">
+            <span class="risk-badge risk-2">RISK LEVEL 2</span>
+            <span class="risk-title">Medium Risk</span>
+          </div>
+          <div class="risk-examples">Sending emails, editing files, posting content, modifying data.</div>
+          <div class="risk-auth-label">Authentication required <span style="font-size:10px;color:var(--text-3);font-weight:400;">select any combination</span></div>
+          <div class="risk-auth-options">
+            <div class="risk-opt selected" onclick="toggleNone(this,'r2')">None</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r2')">PIN</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r2')">Password</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r2')">2FA</div>
+          </div>
+        </div>
+
+        <!-- Risk 3 -->
+        <div class="risk-block">
+          <div class="risk-header">
+            <span class="risk-badge risk-3">RISK LEVEL 3</span>
+            <span class="risk-title">High Risk</span>
+          </div>
+          <div class="risk-examples">Payments, crypto transfers, identity changes, irreversible actions.</div>
+          <div class="risk-auth-label">Authentication required <span style="font-size:10px;color:var(--text-3);font-weight:400;">select any combination</span></div>
+          <div class="risk-auth-options">
+            <div class="risk-opt locked">Admin Phrase ✓</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r3')">PIN</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r3')">Password</div>
+            <div class="risk-opt" onclick="toggleAuth(this,'r3')">2FA</div>
+          </div>
+          <div class="risk-note">Admin phrase is always required for Level 3. Stack any additional layers on top.</div>
+        </div>
+
+        <button class="btn-primary" onclick="launchShell()" style="margin-top:4px;">Launch IrohOS →</button>
+        <button class="btn-secondary" onclick="goStep(3)">← Back</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SCREEN: MAIN SHELL
+═══════════════════════════════════ -->
+<div class="screen" id="screen-shell">
+
+  <!-- OVERLAY + SIDEBAR -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><div class="logo-mark">I</div><div class="logo-name">iroh<span>OS</span></div></div>
+      <button class="close-btn" onclick="closeSidebar()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-tabs">
+      <div class="s-tab active" onclick="switchTab(this,'trace')">Trace</div>
+      <div class="s-tab" onclick="switchTab(this,'tools')">Tools</div>
+      <div class="s-tab" onclick="switchTab(this,'smiths')">Smiths</div>
+      <div class="s-tab" onclick="switchTab(this,'growth')">Growth</div>
+      <div class="s-tab" onclick="switchTab(this,'settings')">Settings</div>
+    </div>
+    <div class="sidebar-body">
+
+      <!-- TRACE -->
+      <div class="s-panel active" id="panel-trace">
+        <div class="s-label">Live Agent Trace</div>
+        <div class="trace-entry new">
+          <div class="trace-top"><span class="t-tag tt-observe">OBSERVE</span><span class="t-id">#t-0248</span></div>
+          <div class="t-msg">Received: "Refactor adapter layer for file I/O ops"</div>
+          <div class="t-reason">Classifying scope — file I/O is adapter-layer. No escalation needed.</div>
+          <div class="t-meta"><span>14:32:01</span><span>conf: 97%</span></div>
+        </div>
+        <div class="trace-entry">
+          <div class="trace-top"><span class="t-tag tt-decide">DECIDE</span><span class="t-id">#t-0247</span></div>
+          <div class="t-msg">Strategy: typed modular wrapper</div>
+          <div class="t-reason">Prior #22 — typed interfaces reduced errors 34% in similar patterns.</div>
+          <div class="t-meta"><span>14:31:55</span><span>conf: 89%</span><span>prior: #22</span></div>
+        </div>
+        <div class="trace-entry">
+          <div class="trace-top"><span class="t-tag tt-action">ACTION</span><span class="t-id">#t-0246</span></div>
+          <div class="t-msg">write_file("adapters/io_wrapper.ts")</div>
+          <div class="t-reason">Sandboxed write — risk level 1. No auth required.</div>
+          <div class="t-meta"><span>14:31:48</span><span>conf: 99%</span><span>risk: 1</span></div>
+        </div>
+        <div class="trace-entry">
+          <div class="trace-top"><span class="t-tag tt-escalate">ESCALATE</span><span class="t-id">#t-0241</span></div>
+          <div class="t-msg">External socket dependency — flagging for review</div>
+          <div class="t-reason">Exceeds adapter scope. Tier-2 escalation policy.</div>
+          <div class="t-meta"><span>14:28:11</span><span>conf: 62%</span><span>risk: 2</span></div>
+        </div>
+        <div class="trace-entry">
+          <div class="trace-top"><span class="t-tag tt-complete">COMPLETE</span><span class="t-id">#t-0237</span></div>
+          <div class="t-msg">Task closed: "Build Digi Defense stage schema v2"</div>
+          <div class="t-meta"><span>14:19:04</span><span>conf: 95%</span></div>
+        </div>
+      </div>
+
+      <!-- TOOLS (capability index only) -->
+      <div class="s-panel" id="panel-tools">
+        <div class="s-label">Capability Index</div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(0,200,150,0.1);">📁</div>
+            <div class="tool-info">
+              <div class="tool-name">File System Access</div>
+              <div class="tool-desc">Read, write, and organize files in sandboxed workspace.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-1">Risk 1</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">enabled</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(79,143,255,0.1);">📧</div>
+            <div class="tool-info">
+              <div class="tool-name">Email Composer</div>
+              <div class="tool-desc">Draft and send emails on your behalf.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-2">Risk 2</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">enabled</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(245,166,35,0.1);">🌐</div>
+            <div class="tool-info">
+              <div class="tool-name">Web Search</div>
+              <div class="tool-desc">Query the web for live information.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-1">Risk 1</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">enabled</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(255,79,79,0.1);">💸</div>
+            <div class="tool-info">
+              <div class="tool-name">Crypto Transfer</div>
+              <div class="tool-desc">Execute on-chain transfers via connected wallet.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-3">Risk 3</span>
+            <div class="toggle-wrap">
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">disabled</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;padding:4px 2px;">Tools are sourced from The Forge. Iroh will request new capabilities as needed.</div>
+      </div>
+
+      <!-- SMITHS (specialized subagents) -->
+      <div class="s-panel" id="panel-smiths">
+        <div class="s-label">Available Smiths</div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(168,85,247,0.1);">⚒️</div>
+            <div class="tool-info">
+              <div class="tool-name">Research Smith</div>
+              <div class="tool-desc">Specialized in deep research, synthesis, and knowledge aggregation.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-1">Risk 1</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">active</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(79,143,255,0.1);">⚒️</div>
+            <div class="tool-info">
+              <div class="tool-name">Code Smith</div>
+              <div class="tool-desc">Expert in code generation, debugging, and technical architecture.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-2">Risk 2</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">active</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(0,200,150,0.1);">⚒️</div>
+            <div class="tool-info">
+              <div class="tool-name">Strategy Smith</div>
+              <div class="tool-desc">Tactical planning, decision analysis, and competitive intelligence.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-1">Risk 1</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">active</span>
+            </div>
+          </div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-top">
+            <div class="tool-icon" style="background:rgba(245,166,35,0.1);">⚒️</div>
+            <div class="tool-info">
+              <div class="tool-name">Data Smith</div>
+              <div class="tool-desc">Data processing, analysis, visualization, and statistical modeling.</div>
+            </div>
+          </div>
+          <div class="tool-bottom">
+            <span class="tool-risk risk-2">Risk 2</span>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">active</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;padding:4px 2px;margin-top:4px;">Smiths are specialized subagents. Iroh delegates complex tasks to the right Smith.</div>
+      </div>
+
+      <!-- GROWTH -->
+      <div class="s-panel" id="panel-growth">
+        <div class="s-label">Learning Overview</div>
+        <div class="growth-grid">
+          <div class="growth-stat"><div class="growth-stat-val">248</div><div class="growth-stat-label">decisions today</div></div>
+          <div class="growth-stat"><div class="growth-stat-val">91%</div><div class="growth-stat-label">success rate</div></div>
+          <div class="growth-stat"><div class="growth-stat-val">37</div><div class="growth-stat-label">active priors</div></div>
+          <div class="growth-stat"><div class="growth-stat-val">4</div><div class="growth-stat-label">tools available</div></div>
+        </div>
+        <div class="s-label" style="margin-top:8px;">What Iroh learned this week</div>
+        <div class="learn-card">
+          <div class="learn-title">Adapter patterns</div>
+          <div class="learn-body">Typed interfaces consistently reduce downstream errors. Now a default strategy for all adapter-layer work.</div>
+        </div>
+        <div class="learn-card">
+          <div class="learn-title">Scope discipline</div>
+          <div class="learn-body">Iroh correctly escalated 4 out of 4 out-of-scope actions this week — sandbox boundaries are stable.</div>
+        </div>
+        <div class="learn-card">
+          <div class="learn-title">Context switching</div>
+          <div class="learn-body">Transitions between Digi Defense and IrohOS Dev have zero cross-contamination across 31 sessions.</div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="s-panel" id="panel-settings">
+        <div class="s-label">Security</div>
+        <div class="setting-row">
+          <div class="setting-icon">🔑</div>
+          <div class="setting-info">
+            <div class="setting-name">Admin Phrase</div>
+            <div class="setting-desc">Required for all Risk Level 3 actions</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">🛡</div>
+          <div class="setting-info">
+            <div class="setting-name">Risk Level Auth</div>
+            <div class="setting-desc">L1: None · L2: None · L3: Phrase</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="s-label" style="margin-top:8px;">Intelligence</div>
+        <div class="setting-row">
+          <div class="setting-icon">🧠</div>
+          <div class="setting-info">
+            <div class="setting-name">Main LLM</div>
+            <div class="setting-desc">Primary + backup API keys</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">🎓</div>
+          <div class="setting-info">
+            <div class="setting-name">Tutor LLM</div>
+            <div class="setting-desc">Tutor + backup API keys</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="s-label" style="margin-top:8px;">Account</div>
+        <div class="setting-row">
+          <div class="setting-icon">👤</div>
+          <div class="setting-info">
+            <div class="setting-name">Profile</div>
+            <div class="setting-desc" id="setting-username">don_vortex</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="setting-row">
+          <div class="setting-icon">🛡</div>
+          <div class="setting-info">
+            <div class="setting-name">Glove Integration</div>
+            <div class="setting-desc">Connect / manage subscription</div>
+          </div>
+          <svg class="setting-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+
+        <div class="s-label" style="margin-top:12px;">Agent Personality</div>
+        <div class="personality-card">
+          <div class="personality-body">
+            <div class="p-field-label" style="margin-bottom:2px;">Identity</div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5;">Describe how your agent should think, speak, and behave. Write it however feels natural — traits, values, style, or a full character description.</div>
+            <textarea class="p-textarea" id="p-identity" style="min-height:120px;" placeholder="e.g. Tactical and direct. Never sugarcoats. Thinks like a founder — speed over perfection, but flags ambiguity before acting. Stays calm under pressure. Occasionally dry humor."></textarea>
+            <button class="p-save-btn" onclick="savePersonality()">Save</button>
+            <div class="p-save-confirm" id="p-save-confirm">✓ Identity saved — active next session</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="main-header">
+    <button class="burger" onclick="openSidebar()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="h-logo">
+      <div class="h-logo-mark">I</div>
+      <div class="h-logo-name">iroh<span>OS</span></div>
+    </div>
+    <div class="h-center">
+      <div class="ctx-pill">
+        <div class="ctx-dot run"></div>
+        IrohOS Dev
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="opacity:.4"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="avatar" id="shell-avatar">D</div>
+  </div>
+
+  <!-- NAV VIEWS (home / tasks / workspace) -->
+  <!-- HOME -->
+  <div id="view-home" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+    <div class="chat-area" id="chatArea">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-logo-mark">I</div>
+        <div class="empty-title" id="shell-greeting">What should Iroh do?</div>
+        <div class="empty-sub">Every decision gets logged and reasoned. Just talk to Iroh.</div>
+        <div class="suggestion-row">
+          <div class="suggestion" onclick="sendSuggestion(this)">Refactor the adapter layer</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Show today's decisions</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Load Digi Defense context</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Summarize active priors</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <div class="input-inner">
+        <div class="input-top">
+          <textarea id="msgInput" rows="1" placeholder="Message Iroh…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" onclick="sendMessage()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 14L14 8L2 2V7L10 8L2 9V14Z" fill="black"/></svg>
+          </button>
+        </div>
+        <div class="input-footer">
+          <div class="input-footer-btn">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.5V6L7.5 7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Trace on
+          </div>
+          <div class="input-sep"></div>
+          <div class="input-footer-btn">IrohOS Dev</div>
+          <span style="margin-left:auto;">⇧ Enter for new line</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div id="view-tasks" style="flex:1;display:none;flex-direction:column;min-height:0;">
+    <div class="content-panel">
+      <div class="panel-title">Tasks</div>
+      <div class="panel-sub">What Iroh is doing and has done. Start tasks by talking to Iroh on Home.</div>
+      <div class="section-label">Active</div>
+      <div class="task-card">
+        <div class="task-top">
+          <div class="task-name">Refactor adapter layer · file I/O</div>
+          <span class="task-status ts-running">Running</span>
+        </div>
+        <div class="task-steps">
+          <div class="task-step"><div class="step-dot done"></div> Classified scope as adapter-layer</div>
+          <div class="task-step"><div class="step-dot done"></div> Selected typed interface strategy</div>
+          <div class="task-step"><div class="step-dot active"></div> Writing io_wrapper.ts</div>
+          <div class="task-step"><div class="step-dot pending"></div> Verify against existing tests</div>
+        </div>
+        <div class="task-meta"><span>Started 14:31</span><span>IrohOS Dev</span><span>Risk 1</span></div>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Completed</div>
+      <div class="task-card">
+        <div class="task-top">
+          <div class="task-name">Build Digi Defense stage schema v2</div>
+          <span class="task-status ts-done">Done</span>
+        </div>
+        <div class="task-steps">
+          <div class="task-step"><div class="step-dot done"></div> Designed season structure</div>
+          <div class="task-step"><div class="step-dot done"></div> Built skill tree data model</div>
+          <div class="task-step"><div class="step-dot done"></div> Exported schema JSON</div>
+        </div>
+        <div class="task-meta"><span>14:19 today</span><span>Digi Defense</span><span>2 files</span></div>
+      </div>
+      <div class="task-card">
+        <div class="task-top">
+          <div class="task-name">Draft Offload tier structure doc</div>
+          <span class="task-status ts-done">Done</span>
+        </div>
+        <div class="task-steps">
+          <div class="task-step"><div class="step-dot done"></div> Outlined Free / Pro / Master tiers</div>
+          <div class="task-step"><div class="step-dot done"></div> Added transaction fee model</div>
+          <div class="task-step"><div class="step-dot done"></div> Saved to Workspace</div>
+        </div>
+        <div class="task-meta"><span>Yesterday</span><span>Offload</span><span>1 file</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div id="view-workspace" style="flex:1;display:none;flex-direction:column;min-height:0;">
+    <div class="content-panel">
+      <div class="panel-title">Workspace</div>
+      <div class="panel-sub">Outputs, files, and notes Iroh has produced. Ask Iroh to generate anything new.</div>
+      <div class="section-label">Recent</div>
+      <div class="file-row">
+        <div class="file-icon">📄</div>
+        <div class="file-info">
+          <div class="file-name">io_wrapper.ts</div>
+          <div class="file-meta">IrohOS Dev · in progress · 2.1kb</div>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-icon">📊</div>
+        <div class="file-info">
+          <div class="file-name">stage_schema_v2.json</div>
+          <div class="file-meta">Digi Defense · today · 4.8kb</div>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-icon">📝</div>
+        <div class="file-info">
+          <div class="file-name">offload_tier_structure.md</div>
+          <div class="file-meta">Offload · yesterday · 1.2kb</div>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-icon">📈</div>
+        <div class="file-info">
+          <div class="file-name">vortex_contest_review.md</div>
+          <div class="file-meta">Vortex-Global · 3 days ago · 3.4kb</div>
+        </div>
+      </div>
+      <div class="file-row">
+        <div class="file-icon">🗂</div>
+        <div class="file-info">
+          <div class="file-name">glove_gtm_phase3.md</div>
+          <div class="file-meta">Glove · 4 days ago · 2.7kb</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOUNDRY (LLMWIKI knowledge layer) -->
+  <div id="view-foundry" style="flex:1;display:none;flex-direction:column;min-height:0;">
+    <div class="content-panel">
+      <div class="panel-title">The Foundry</div>
+      <div class="panel-sub">Your agent's knowledge layer. Iroh builds and refines this over time.</div>
+      <div class="section-label">Knowledge Base</div>
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:24px;">📚</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-1);">Knowledge entries</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:2px;">1,247 learned patterns · 89 active domains</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-size:24px;">🧠</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-1);">Learning rate</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:2px;">+18 new patterns this week · stability: 94%</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-label" style="margin-top:16px;">Recent Entries</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-1);">Typed interfaces reduce adapter errors by 34%</div>
+          <div style="font-size:10.5px;color:var(--text-2);line-height:1.5;">Applied in 14 decisions · confidence: 97% · domain: architecture</div>
+        </div>
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-1);">Context switching has zero cross-contamination</div>
+          <div style="font-size:10.5px;color:var(--text-2);line-height:1.5;">Stable across 31 sessions · confidence: 99% · domain: context-management</div>
+        </div>
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-1);">External socket calls require escalation review</div>
+          <div style="font-size:10.5px;color:var(--text-2);line-height:1.5;">Applied in 6 decisions · confidence: 88% · domain: security-policy</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:rgba(0,200,150,0.05);border:1px solid rgba(0,200,150,0.12);border-radius:10px;font-size:11.5px;color:var(--text-2);line-height:1.6;">
+        <span style="color:var(--accent);font-weight:600;">The Foundry</span> is your agent's dynamic knowledge layer. Every decision, feedback, and success refines these patterns. Your agent learns in real time.
+      </div>
+    </div>
+  </div>
+
+  <!-- VAULT AUTH MODAL -->
+  <div class="modal-backdrop" id="vaultModal">
+    <div class="modal-card">
+      <div class="modal-lock-icon">🔐</div>
+      <div class="modal-title">File Vault</div>
+      <div class="modal-sub">Authentication required. Once unlocked, you and your agent will both have access for this session.</div>
+      <div class="modal-auth-steps" id="vaultAuthSteps">
+        <div class="modal-auth-step">
+          <div class="modal-auth-label"><span class="step-num">1</span> Admin Phrase</div>
+          <input class="modal-input" type="password" id="vault-phrase" placeholder="Enter your admin phrase…"/>
+        </div>
+        <div class="modal-auth-step">
+          <div class="modal-auth-label"><span class="step-num">2</span> PIN</div>
+          <input class="modal-input" type="password" id="vault-pin" placeholder="4–6 digit PIN" maxlength="6" inputmode="numeric"/>
+        </div>
+      </div>
+      <div class="modal-error" id="vaultError"></div>
+      <button class="btn-vault-unlock" onclick="attemptVaultUnlock()">Unlock Vault</button>
+      <button class="btn-vault-cancel" onclick="closeVaultModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- VAULT VIEW -->
+  <div id="view-vault" style="flex:1;display:none;flex-direction:column;min-height:0;">
+
+    <!-- locked state -->
+    <div id="vault-locked" class="vault-locked-overlay">
+      <div class="vault-locked-icon">🔒</div>
+      <div class="vault-locked-title">File Vault</div>
+      <div class="vault-locked-sub">Encrypted files your agent cannot see unless you open a session. Decryption key is held in your agent's secure vault.</div>
+      <div class="vault-locked-detail">
+        <div class="vault-locked-detail-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="5" width="10" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V3.5a3 3 0 016 0V5" stroke="currentColor" stroke-width="1.2"/></svg>
+          AES-256 encrypted at rest
+        </div>
+        <div class="vault-locked-detail-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l1.5 1.5L8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Agent access: <strong style="color:var(--red);margin-left:4px;">none</strong>
+        </div>
+        <div class="vault-locked-detail-row">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4.5H11L8.5 6.5L9.5 10L6 8L2.5 10L3.5 6.5L1 4.5H4.5L6 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          5 encrypted files
+        </div>
+      </div>
+      <button class="btn-vault-open" onclick="openVaultModal()">Open Vault Session</button>
+    </div>
+
+    <!-- unlocked state -->
+    <div id="vault-unlocked" style="display:none;flex:1;flex-direction:column;min-height:0;">
+      <div class="vault-banner">
+        <div class="vault-banner-dot"></div>
+        <div class="vault-banner-text">Vault session active — <strong>agent has access</strong></div>
+        <div class="vault-lock-btn" onclick="lockVault()">🔒 Lock</div>
+      </div>
+      <div class="content-panel" style="flex:1;overflow-y:auto;">
+        <div class="panel-title">File Vault</div>
+        <div class="panel-sub">Decrypted for this session. Your agent can read and reference these files.</div>
+        <div class="section-label">Vault contents · 5 files</div>
+
+        <div class="vault-file-row">
+          <div class="vault-file-icon">🔑</div>
+          <div class="vault-file-info">
+            <div class="vault-file-name">seed_phrases.enc</div>
+            <div class="vault-file-meta">Crypto · last modified 3 days ago · 0.4kb</div>
+          </div>
+          <span class="vault-enc-badge">decrypted</span>
+        </div>
+        <div class="vault-file-row">
+          <div class="vault-file-icon">📋</div>
+          <div class="vault-file-info">
+            <div class="vault-file-name">api_keys_master.enc</div>
+            <div class="vault-file-meta">Credentials · last modified today · 1.1kb</div>
+          </div>
+          <span class="vault-enc-badge">decrypted</span>
+        </div>
+        <div class="vault-file-row">
+          <div class="vault-file-icon">📜</div>
+          <div class="vault-file-info">
+            <div class="vault-file-name">legal_id_docs.enc</div>
+            <div class="vault-file-meta">Identity · last modified 2 weeks ago · 8.2kb</div>
+          </div>
+          <span class="vault-enc-badge">decrypted</span>
+        </div>
+        <div class="vault-file-row">
+          <div class="vault-file-icon">💰</div>
+          <div class="vault-file-info">
+            <div class="vault-file-name">financial_accounts.enc</div>
+            <div class="vault-file-meta">Finance · last modified 1 week ago · 3.6kb</div>
+          </div>
+          <span class="vault-enc-badge">decrypted</span>
+        </div>
+        <div class="vault-file-row">
+          <div class="vault-file-icon">🗝</div>
+          <div class="vault-file-info">
+            <div class="vault-file-name">vortex_private_keys.enc</div>
+            <div class="vault-file-meta">Vortex-Global · last modified 5 days ago · 0.8kb</div>
+          </div>
+          <span class="vault-enc-badge">decrypted</span>
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(0,200,150,0.05);border:1px solid rgba(0,200,150,0.12);border-radius:10px;font-size:12px;color:var(--text-2);line-height:1.6;">
+          <span style="color:var(--accent);font-weight:600;">Agent access granted.</span> Your agent can reference vault contents during this session. Vault auto-locks when you leave this view or close the app.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchNav('home')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9L10 3L17 9V17H13V13H7V17H3V9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item" id="nav-tasks" onclick="switchNav('tasks')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M7 10L9 12L13 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="nav-label">Tasks</span>
+    </div>
+    <div class="nav-item" id="nav-workspace" onclick="switchNav('workspace')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 5C4 3.9 4.9 3 6 3H11L16 8V17C16 18.1 15.1 19 14 19H6C4.9 19 4 18.1 4 17V5Z" stroke="currentColor" stroke-width="1.5"/><path d="M11 3V8H16" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span class="nav-label">Workspace</span>
+    </div>
+    <div class="nav-item" id="nav-foundry" onclick="switchNav('foundry')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3 8H17M6 5V20M14 5V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="nav-label">Foundry</span>
+    </div>
+    <div class="nav-item" id="nav-vault" onclick="switchNav('vault')" style="position:relative;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="6" width="16" height="12" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M6 6V4.5a4 4 0 018 0V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="12" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M10 14v1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="nav-label">Vault</span>
+      <div class="vault-nav-dot" id="vaultNavDot"></div>
+    </div>
+  </div>
+
+</div><!-- end screen-shell -->
+
+<script>
+// ── ONBOARDING ──
+function goStep(n) {
+  for(let i=1;i<=4;i++) document.getElementById('ob-step-'+i).style.display = 'none';
+  document.getElementById('ob-step-'+n).style.display = 'block';
+  document.getElementById('ob-card').style.animation = 'none';
+  requestAnimationFrame(()=>{
+    document.getElementById('ob-card').style.animation = 'fadeUp 0.35s both';
+  });
+}
+
+function toggleNone(el, group) {
+  // Selecting "None" clears all other selections
+  const opts = el.closest('.risk-auth-options').querySelectorAll('.risk-opt:not(.locked)');
+  opts.forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleAuth(el, group) {
+  // Selecting any auth method deselects "None", toggles this option
+  const container = el.closest('.risk-auth-options');
+  const noneOpt = container.querySelector('.risk-opt:first-child');
+  if(noneOpt && noneOpt.textContent === 'None') noneOpt.classList.remove('selected');
+  el.classList.toggle('selected');
+  // If nothing is selected, revert to None
+  const anySelected = [...container.querySelectorAll('.risk-opt:not(.locked)')].some(o => o.classList.contains('selected'));
+  if(!anySelected) noneOpt.classList.add('selected');
+}
+
+function previewAgentName(val) {
+  const preview = document.getElementById('agent-name-preview');
+  const label = document.getElementById('agent-name-preview-val');
+  if(val.trim()) {
+    preview.style.display = 'block';
+    label.textContent = val.trim();
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function launchShell() {
+  const username = document.getElementById('ob-username').value.trim() || 'don_vortex';
+  const agentName = document.getElementById('ob-agentname').value.trim() || 'Iroh';
+  document.getElementById('screen-onboarding').classList.remove('active');
+  document.getElementById('screen-shell').classList.add('active');
+  document.getElementById('shell-greeting').textContent = 'What should ' + agentName + ' do?';
+  document.getElementById('shell-avatar').textContent = username.charAt(0).toUpperCase();
+  document.getElementById('setting-username').textContent = username;
+  // Update all "Iroh" labels in shell to agent name
+  document.getElementById('msgInput').placeholder = 'Message ' + agentName + '…';
+  document.querySelector('.empty-sub').textContent = 'Every decision gets logged and reasoned. Just talk to ' + agentName + '.';
+  document.querySelectorAll('.msg-avatar.iroh').forEach(el => el.textContent = agentName.charAt(0).toUpperCase());
+  document.querySelector('.h-logo-name').innerHTML = agentName.toLowerCase() + '<span>OS</span>';
+  document.querySelector('.logo-name').innerHTML = agentName.toLowerCase() + '<span>OS</span>';
+  // Store for chat use
+  window._agentName = agentName;
+}
+
+// ── SIDEBAR ──
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function switchTab(el, id) {
+  document.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.s-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+// ── BOTTOM NAV ──
+function switchNav(view) {
+  ['home','tasks','workspace','foundry','vault'].forEach(v=>{
+    const el = document.getElementById('view-'+v);
+    if(el) el.style.display = 'none';
+    const nav = document.getElementById('nav-'+v);
+    if(nav) nav.classList.remove('active');
+  });
+  document.getElementById('view-'+view).style.display = 'flex';
+  document.getElementById('view-'+view).style.flexDirection = 'column';
+  document.getElementById('nav-'+view).classList.add('active');
+  // if navigating away from vault while unlocked, lock it
+  if(view !== 'vault' && window._vaultOpen) lockVault();
+}
+
+// ── VAULT ──
+window._vaultOpen = false;
+
+function openVaultModal() {
+  document.getElementById('vaultModal').classList.add('open');
+  document.getElementById('vaultError').textContent = '';
+  document.getElementById('vault-phrase').value = '';
+  document.getElementById('vault-pin').value = '';
+  setTimeout(()=> document.getElementById('vault-phrase').focus(), 200);
+}
+
+function closeVaultModal() {
+  document.getElementById('vaultModal').classList.remove('open');
+}
+
+function attemptVaultUnlock() {
+  const phrase = document.getElementById('vault-phrase').value.trim();
+  const pin = document.getElementById('vault-pin').value.trim();
+  const err = document.getElementById('vaultError');
+
+  if(!phrase) { err.textContent = 'Admin phrase is required.'; return; }
+  if(!pin) { err.textContent = 'PIN is required.'; return; }
+
+  // Simulate decryption delay
+  err.textContent = '';
+  const btn = document.querySelector('.btn-vault-unlock');
+  btn.textContent = 'Decrypting…';
+  btn.style.opacity = '0.6';
+
+  setTimeout(()=>{
+    btn.textContent = 'Unlock Vault';
+    btn.style.opacity = '1';
+    closeVaultModal();
+    unlockVault();
+  }, 1200);
+}
+
+function unlockVault() {
+  window._vaultOpen = true;
+  document.getElementById('vault-locked').style.display = 'none';
+  document.getElementById('vault-unlocked').style.display = 'flex';
+  document.getElementById('vault-unlocked').style.flexDirection = 'column';
+  // show red dot on nav icon
+  document.getElementById('vaultNavDot').classList.add('visible');
+}
+
+function lockVault() {
+  window._vaultOpen = false;
+  document.getElementById('vault-locked').style.display = 'flex';
+  document.getElementById('vault-unlocked').style.display = 'none';
+  document.getElementById('vaultNavDot').classList.remove('visible');
+  // re-align locked overlay
+  document.getElementById('vault-locked').style.flexDirection = 'column';
+}
+
+// ── CHAT ──
+function autoResize(el) {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,180)+'px';
+}
+function handleKey(e) {
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+}
+function sendSuggestion(el){sendMessage(el.textContent);}
+
+const replies=[
+  {text:"Analyzing the adapter layer. Scoping each operation to confirm nothing exceeds the adapter boundary before writing.",trace:["OBSERVE · Received refactor request — classifying scope","DECIDE · Strategy: typed modular wrapper — prior #22 applied","ACTION · write_file('adapters/io_wrapper.ts') · risk:1 · no auth needed","COMPLETE · Adapter layer refactored — 3 files modified"]},
+  {text:"Today: 248 decisions, avg confidence 91.4%, 4 escalations. The spike at 14:28 was a tier-2 flag on an undeclared external socket dependency.",trace:["OBSERVE · Query: today's decision summary","ACTION · read_log(today) · 248 entries retrieved","DECIDE · Summarizing by type and confidence band","COMPLETE · Summary generated"]},
+  {text:"Digi Defense context loaded. Season 1 stage schema v2, skill tree defined, weapon loadout system in progress. Ready to continue.",trace:["OBSERVE · Context switch requested: Digi Defense","ACTION · load_context('digi-defense') · 14 priors restored","COMPLETE · Context active — last checkpoint: stage schema v2"]},
+  {text:"37 active priors. Top 3 by frequency: #18 sandbox before write (31×), #22 typed interfaces (14×), #02 confirm destructive ops (8×).",trace:["OBSERVE · Query: summarize active priors","ACTION · read_priors() · 37 loaded","DECIDE · Ranking by application frequency","COMPLETE · Summary ready"]}
+];
+let ri=0;
+
+function sendMessage(text){
+  const input=document.getElementById('msgInput');
+  const msg=text||input.value.trim();
+  if(!msg)return;
+  const chatArea=document.getElementById('chatArea');
+  const empty=document.getElementById('emptyState');
+  if(empty)empty.remove();
+
+  const u=document.createElement('div');
+  u.className='msg-wrap';
+  u.innerHTML=`<div class="msg-avatar user">${document.getElementById('shell-avatar').textContent}</div><div class="msg-body"><div class="msg-name">You <span class="ts">${nowTime()}</span></div><div class="msg-text"><p>${msg}</p></div></div>`;
+  chatArea.appendChild(u);
+  input.value='';input.style.height='auto';
+  chatArea.scrollTop=chatArea.scrollHeight;
+
+  const reply=replies[ri%replies.length];ri++;
+  setTimeout(()=>{
+    const traceHtml=reply.trace.map(l=>`<div class="msg-trace-line">${l}</div>`).join('');
+    const r=document.createElement('div');
+    r.className='msg-wrap';
+    const an=window._agentName||'Iroh';
+    r.innerHTML=`<div class="msg-avatar iroh">${an.charAt(0).toUpperCase()}</div><div class="msg-body"><div class="msg-name">${an} <span class="ts">${nowTime()}</span></div><div class="msg-text"><p>${reply.text}</p></div><div class="msg-trace"><div class="msg-trace-header"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6L5.5 7.5L8.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Reasoning trace · ${reply.trace.length} steps <svg class="trace-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="msg-trace-body">${traceHtml}</div></div></div>`;
+    chatArea.appendChild(r);
+    chatArea.scrollTop=chatArea.scrollHeight;
+    r.querySelector('.msg-trace-header').addEventListener('click',function(){
+      this.nextElementSibling.classList.toggle('open');
+      this.querySelector('.trace-arrow').classList.toggle('open');
+    });
+  },700);
+}
+
+function nowTime(){return new Date().toTimeString().slice(0,5);}
+
+function savePersonality() {
+  const confirm = document.getElementById('p-save-confirm');
+  confirm.classList.add('show');
+  setTimeout(() => confirm.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
