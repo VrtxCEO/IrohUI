@@ -31,6 +31,8 @@ export interface OnboardingData {
   riskAuth: Record<RiskLevel, AuthOption[]>;
   freedomLevel: FreedomLevel;
   freedomLevelChangeAuth: AuthOption[];
+  adminPhrase: string;
+  pin: string;
 }
 
 export interface TraceEntry {

@@ -24,7 +24,12 @@ export function OnboardingScreen({ onLaunch }: Props) {
     riskAuth: DEFAULT_RISK_AUTH,
     freedomLevel: 2,
     freedomLevelChangeAuth: [],
+    adminPhrase: '',
+    pin: '',
   })
+  const [confirmPhrase, setConfirmPhrase] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [authError, setAuthError] = useState('')
 
   function set(key: keyof OnboardingData, value: unknown) {
     setData(d => ({ ...d, [key]: value }))
@@ -44,7 +49,16 @@ export function OnboardingScreen({ onLaunch }: Props) {
     return data.riskAuth[risk].includes(opt)
   }
 
-  const dots = [1, 2, 3, 4, 5].map(i =>
+  function validateAuthStep(): boolean {
+    if (!data.adminPhrase.trim()) { setAuthError('Admin phrase is required.'); return false }
+    if (data.adminPhrase !== confirmPhrase) { setAuthError('Admin phrases do not match.'); return false }
+    if (data.pin && !/^\d{4,6}$/.test(data.pin)) { setAuthError('PIN must be 4–6 digits.'); return false }
+    if (data.pin && data.pin !== confirmPin) { setAuthError('PINs do not match.'); return false }
+    setAuthError('')
+    return true
+  }
+
+  const dots = [1, 2, 3, 4, 5, 6].map(i =>
     i < step ? 'done' : i === step ? 'active' : ''
   )
 
@@ -269,7 +283,56 @@ export function OnboardingScreen({ onLaunch }: Props) {
 
           {step === 5 && (
             <>
-              <div className="ob-eyebrow">Step 5 of 5</div>
+              <div className="ob-eyebrow">Step 5 of 6</div>
+              <div className="ob-title">Set your authorization keys</div>
+              <div className="ob-sub">Your admin phrase authorizes high-risk actions and settings changes. Your PIN is for quick confirmation of medium-risk actions.</div>
+
+              <div className="risk-block">
+                <div className="risk-header">
+                  <span className="risk-badge" style={{ background: 'rgba(255,79,79,0.15)', color: 'rgba(255,100,100,0.9)' }}>ADMIN PHRASE</span>
+                  <span className="risk-title">High-stakes authorization</span>
+                </div>
+                <div className="risk-examples">Used for Risk Level 3 actions, freedom level changes, and vault access. Make it something you'll remember but others won't guess.</div>
+                <div className="field" style={{ marginTop: 12, marginBottom: 10 }}>
+                  <div className="field-label">Admin Phrase</div>
+                  <input className="field-input" type="password" placeholder="A strong, memorable phrase…"
+                    value={data.adminPhrase} onChange={e => { set('adminPhrase', e.target.value); setAuthError('') }} />
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <div className="field-label">Confirm Admin Phrase</div>
+                  <input className="field-input" type="password" placeholder="Repeat your phrase…"
+                    value={confirmPhrase} onChange={e => { setConfirmPhrase(e.target.value); setAuthError('') }} />
+                </div>
+              </div>
+
+              <div className="risk-block">
+                <div className="risk-header">
+                  <span className="risk-badge" style={{ background: 'rgba(245,166,35,0.15)', color: 'rgba(245,166,35,0.9)' }}>PIN</span>
+                  <span className="risk-title">Quick confirmation <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-3)' }}>optional</span></span>
+                </div>
+                <div className="risk-examples">4–6 digit PIN for medium-risk actions where a quick tap is enough. Leave blank to skip.</div>
+                <div className="field" style={{ marginTop: 12, marginBottom: 10 }}>
+                  <div className="field-label">PIN</div>
+                  <input className="field-input" type="password" inputMode="numeric" maxLength={6} placeholder="4–6 digits"
+                    value={data.pin} onChange={e => { set('pin', e.target.value.replace(/\D/g, '')); setAuthError('') }} />
+                </div>
+                <div className="field" style={{ marginBottom: 0 }}>
+                  <div className="field-label">Confirm PIN</div>
+                  <input className="field-input" type="password" inputMode="numeric" maxLength={6} placeholder="Repeat PIN"
+                    value={confirmPin} onChange={e => { setConfirmPin(e.target.value.replace(/\D/g, '')); setAuthError('') }} />
+                </div>
+              </div>
+
+              {authError && <div style={{ fontSize: 12, color: 'var(--red)', textAlign: 'center' }}>{authError}</div>}
+
+              <button className="btn-primary" style={{ marginTop: 4 }} onClick={() => { if (validateAuthStep()) setStep(6) }}>Continue →</button>
+              <button className="btn-secondary" onClick={() => setStep(4)}>← Back</button>
+            </>
+          )}
+
+          {step === 6 && (
+            <>
+              <div className="ob-eyebrow">Step 6 of 6</div>
               <div className="ob-title">Access Eyro anywhere</div>
               <div className="ob-sub">EyroOS runs on your PC or server. If you want to use it on the go from a phone or browser, you'll need to connect your installation to the web app.</div>
 
@@ -300,7 +363,7 @@ export function OnboardingScreen({ onLaunch }: Props) {
               </div>
 
               <button className="btn-primary" style={{ marginTop: 8 }} onClick={() => onLaunch(data)}>Launch EyroOS →</button>
-              <button className="btn-secondary" onClick={() => setStep(4)}>← Back</button>
+              <button className="btn-secondary" onClick={() => setStep(5)}>← Back</button>
             </>
           )}
         </div>
