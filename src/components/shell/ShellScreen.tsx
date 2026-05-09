@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { NavView, ChatMessage } from '../../types'
 import type { AuthUser, OsSession } from '../../lib/auth'
+import { clearAuth, clearSession } from '../../lib/auth'
 import { Sidebar } from '../sidebar/Sidebar'
 import { HomeView } from '../views/HomeView'
 import { TasksView } from '../views/TasksView'
@@ -22,6 +23,22 @@ export function ShellScreen({ user, session }: Props) {
   const channelId   = useMemo(() => session.os_instance_id, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [avatarOpen, setAvatarOpen]   = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
+
+  function handleLogout() {
+    clearAuth()
+    clearSession()
+    window.location.reload()
+  }
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarOpen(false)
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
   const [activeView, setActiveView] = useState<NavView>('home')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [vaultOpen, setVaultOpen] = useState(false)
@@ -135,7 +152,15 @@ export function ShellScreen({ user, session }: Props) {
             </svg>
           </div>
         </div>
-        <div className="avatar">{userInitial}</div>
+        <div className="avatar-wrap" ref={avatarRef}>
+          <div className="avatar" onClick={() => setAvatarOpen(o => !o)}>{userInitial}</div>
+          {avatarOpen && (
+            <div className="avatar-menu">
+              <div className="avatar-menu-email">{user.email}</div>
+              <button className="avatar-menu-logout" onClick={handleLogout}>Log out</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Eye background — home view only */}
