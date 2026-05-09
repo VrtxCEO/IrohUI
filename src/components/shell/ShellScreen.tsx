@@ -66,6 +66,14 @@ export function ShellScreen({ user, session }: Props) {
         taskId: reply.taskId ?? undefined,
       }])
     },
+    onError(detail) {
+      setMessages(m => [...m, {
+        id: uid(),
+        role: 'assistant',
+        text: `⚠ ${detail}`,
+        timestamp: nowTime(),
+      }])
+    },
   })
 
   function handleNavSwitch(view: NavView) {

@@ -48,13 +48,13 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
 
   const connect = useCallback(() => {
     if (!mountedRef.current) return
-    const url = `${getWsBase()}/ws/${encodeURIComponent(channelId)}`
+    const wsBase = getWsBase()
+    const skipParam = !isLocalhost(wsBase) ? '?ngrok-skip-browser-warning=true' : ''
+    const url = `${wsBase}/ws/${encodeURIComponent(channelId)}${skipParam}`
     const ws = new WebSocket(url)
     wsRef.current = ws
 
-    ws.onopen = () => {
-      if (mountedRef.current) setConnected(true)
-    }
+    ws.onopen = () => { /* challenge arrives next */ }
 
     ws.onmessage = (ev) => {
       if (!mountedRef.current) return
@@ -71,10 +71,10 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
           type: 'hello',
           nonce: msg['nonce'],
           connection_token: session.connection_token,
-          user_id: storedUser.id,
+          user_id: storedUser.email,
         }))
       } else if (type === 'session_ok') {
-        // handshake complete — normal message flow resumes
+        if (mountedRef.current) setConnected(true)
       } else if (type === 'auth_error') {
         setBusy(false)
         onError?.(String(msg['detail'] ?? 'Authentication failed'))
