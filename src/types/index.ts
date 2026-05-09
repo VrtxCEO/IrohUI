@@ -14,6 +14,8 @@ export type TraceTag = 'OBSERVE' | 'DECIDE' | 'ACTION' | 'ESCALATE' | 'COMPLETE'
 export type TaskStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 export type StepDotState = 'done' | 'active' | 'pending';
 
+export type FreedomLevel = 0 | 1 | 2 | 3;
+
 export interface OnboardingData {
   username: string;
   agentName: string;
@@ -27,6 +29,8 @@ export interface OnboardingData {
   tutorApiKeyBackup: string;
   gloveConnected: boolean;
   riskAuth: Record<RiskLevel, AuthOption[]>;
+  freedomLevel: FreedomLevel;
+  freedomLevelChangeAuth: AuthOption[];
 }
 
 export interface TraceEntry {

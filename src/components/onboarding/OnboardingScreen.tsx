@@ -1,11 +1,18 @@
 import { useState } from 'react'
-import type { OnboardingData, RiskLevel, AuthOption } from '../../types'
+import type { OnboardingData, RiskLevel, AuthOption, FreedomLevel } from '../../types'
 import { EyroEye } from '../eye/EyroEye'
 import '../components.css'
 
 interface Props { onLaunch: (data: OnboardingData) => void }
 
 const DEFAULT_RISK_AUTH: Record<RiskLevel, AuthOption[]> = { 1: ['none'], 2: ['none'], 3: ['none'] }
+
+const FREEDOM_LABELS: Record<number, { title: string; desc: string }> = {
+  0: { title: 'Locked',      desc: 'Every action requires your approval before executing.' },
+  1: { title: 'Cautious',    desc: 'Risky actions pause for approval. Safe actions run freely.' },
+  2: { title: 'Balanced',    desc: 'Only high-risk actions are gated. Recommended for most users.' },
+  3: { title: 'Autonomous',  desc: 'Eyro acts freely within your defined policy. Full speed.' },
+}
 
 export function OnboardingScreen({ onLaunch }: Props) {
   const [step, setStep] = useState(1)
@@ -15,6 +22,8 @@ export function OnboardingScreen({ onLaunch }: Props) {
     mainApiKey: '', mainApiKeyBackup: '', tutorApiKey: '', tutorApiKeyBackup: '',
     gloveConnected: false,
     riskAuth: DEFAULT_RISK_AUTH,
+    freedomLevel: 2,
+    freedomLevelChangeAuth: [],
   })
 
   function set(key: keyof OnboardingData, value: unknown) {
@@ -210,6 +219,48 @@ export function OnboardingScreen({ onLaunch }: Props) {
                   {risk === 3 && <div className="risk-note">Admin phrase is always required for Level 3. Stack any additional layers on top.</div>}
                 </div>
               ))}
+
+              {/* Freedom Level */}
+              <div className="risk-block" style={{ marginTop: 8 }}>
+                <div className="risk-header">
+                  <span className="risk-badge" style={{ background: 'rgba(168,85,247,0.15)', color: 'rgba(168,85,247,0.9)' }}>FREEDOM LEVEL</span>
+                  <span className="risk-title">Default Autonomy</span>
+                </div>
+                <div className="risk-examples">How much should Eyro act on its own? You can change this anytime — with your admin phrase.</div>
+                <div className="risk-auth-options" style={{ marginTop: 10 }}>
+                  {([0, 1, 2, 3] as FreedomLevel[]).map(lvl => (
+                    <div
+                      key={lvl}
+                      className={`risk-opt ${data.freedomLevel === lvl ? 'selected' : ''}`}
+                      onClick={() => set('freedomLevel', lvl)}
+                      style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2, padding: '10px 12px' }}
+                    >
+                      <span style={{ fontWeight: 600 }}>{lvl} — {FREEDOM_LABELS[lvl].title}</span>
+                      <span style={{ fontSize: 10, opacity: 0.7, fontWeight: 400 }}>{FREEDOM_LABELS[lvl].desc}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="risk-auth-label" style={{ marginTop: 12 }}>
+                  Required to change <span style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 400 }}>admin phrase is always required</span>
+                </div>
+                <div className="risk-auth-options">
+                  <div className="risk-opt locked">Admin Phrase ✓</div>
+                  {(['pin', 'password', '2fa'] as AuthOption[]).map(opt => (
+                    <div
+                      key={opt}
+                      className={`risk-opt ${data.freedomLevelChangeAuth.includes(opt) ? 'selected' : ''}`}
+                      onClick={() => {
+                        const cur = data.freedomLevelChangeAuth
+                        const next = cur.includes(opt) ? cur.filter(o => o !== opt) : [...cur, opt]
+                        set('freedomLevelChangeAuth', next)
+                      }}
+                    >
+                      {opt === '2fa' ? '2FA' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    </div>
+                  ))}
+                </div>
+                <div className="risk-note">Admin phrase is always required to change the freedom level. Stack additional layers for extra security.</div>
+              </div>
 
               <button className="btn-primary" style={{ marginTop: 4 }} onClick={() => setStep(5)}>Continue →</button>
               <button className="btn-secondary" onClick={() => setStep(3)}>← Back</button>

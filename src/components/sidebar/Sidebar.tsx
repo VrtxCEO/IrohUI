@@ -77,6 +77,11 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
   const [saveConfirm, setSaveConfirm] = useState(false)
   const [freedomLevel, setFreedomLevel] = useState<number | null>(null)
   const [savingIdentity, setSavingIdentity] = useState(false)
+  const [flModalOpen, setFlModalOpen] = useState(false)
+  const [flPending, setFlPending] = useState<number | null>(null)
+  const [flPhrase, setFlPhrase] = useState('')
+  const [flError, setFlError] = useState('')
+  const [flSaving, setFlSaving] = useState(false)
 
   const { data: smithData } = usePoll<{ smiths: LiveSmith[] }>(
     () => apiFetch('/api/smiths').then(r => r.json()),
@@ -132,13 +137,32 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
     }
   }
 
-  async function updateFreedomLevel(level: number) {
-    setFreedomLevel(level)
-    await apiFetch('/api/settings/freedom', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level }),
-    }).catch(() => {})
+  function requestFreedomChange(level: number) {
+    if (level === freedomLevel) return
+    setFlPending(level)
+    setFlPhrase('')
+    setFlError('')
+    setFlModalOpen(true)
+  }
+
+  async function confirmFreedomChange() {
+    if (!flPhrase.trim()) { setFlError('Admin phrase is required.'); return }
+    setFlSaving(true)
+    setFlError('')
+    try {
+      const res = await apiFetch('/api/settings/freedom', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: flPending, admin_phrase: flPhrase }),
+      })
+      if (!res.ok) { setFlError('Incorrect admin phrase.'); return }
+      setFreedomLevel(flPending!)
+      setFlModalOpen(false)
+    } catch {
+      setFlError('Could not reach OS.')
+    } finally {
+      setFlSaving(false)
+    }
   }
 
   return (
@@ -271,7 +295,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
             {[0, 1, 2, 3].map(lvl => (
               <button
                 key={lvl}
-                onClick={() => updateFreedomLevel(lvl)}
+                onClick={() => requestFreedomChange(lvl)}
                 style={{
                   flex: 1, padding: '8px 0', borderRadius: 8, border: '1px solid var(--border)',
                   background: freedomLevel === lvl ? 'var(--accent)' : 'var(--bg-2)',
@@ -327,6 +351,38 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
           </div>
         </div>
       </div>
+
+      {/* Freedom level auth modal */}
+      {flModalOpen && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, borderRadius: 'inherit' }}>
+          <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, width: '85%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>Change Freedom Level</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+              Changing to level <strong style={{ color: 'var(--text-1)' }}>{flPending}</strong> requires your admin phrase.
+            </div>
+            <input
+              type="password"
+              placeholder="Admin phrase…"
+              value={flPhrase}
+              onChange={e => setFlPhrase(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && confirmFreedomChange()}
+              style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', color: 'var(--text-1)', fontSize: 13 }}
+              autoFocus
+            />
+            {flError && <div style={{ fontSize: 11, color: 'var(--red)' }}>{flError}</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={confirmFreedomChange} disabled={flSaving}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, background: 'var(--accent)', border: 'none', color: '#000', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                {flSaving ? 'Confirming…' : 'Confirm'}
+              </button>
+              <button onClick={() => setFlModalOpen(false)}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, background: 'var(--bg-3)', border: '1px solid var(--border)', color: 'var(--text-2)', fontSize: 13, cursor: 'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
