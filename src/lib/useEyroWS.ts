@@ -9,7 +9,13 @@ import type { TraceEntry } from '../types'
 import { getSession, getStoredUser } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
-const WS_BASE  = API_BASE.replace(/^http/, 'ws')
+const _FALLBACK_API = API_BASE
+
+function getWsBase(): string {
+  const session = getSession()
+  const base = session?.direct_url || _FALLBACK_API
+  return base.replace(/^http/, 'ws')
+}
 
 export interface EyroReply {
   text: string
@@ -33,7 +39,7 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
 
   const connect = useCallback(() => {
     if (!mountedRef.current) return
-    const url = `${WS_BASE}/ws/${encodeURIComponent(channelId)}`
+    const url = `${getWsBase()}/ws/${encodeURIComponent(channelId)}`
     const ws = new WebSocket(url)
     wsRef.current = ws
 
