@@ -151,8 +151,9 @@ export function getObData(): Record<string, unknown> | null {
 
 export function parseBindPayload(encoded: string): BindPayload | null {
   try {
-    const padded = encoded + '=='.slice((encoded.length + 3) % 4)
-    const json = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+    const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const json = atob(padded)
     return JSON.parse(json) as BindPayload
   } catch {
     return null
