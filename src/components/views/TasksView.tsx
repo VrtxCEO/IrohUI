@@ -6,7 +6,7 @@ interface LedgerTask {
   status: string
   step_cursor: number
   total_steps: number
-  step_results: { capability_id?: string; action?: string; success?: boolean }[]
+  step_results: { tool_id?: string; action?: string; success?: boolean }[]
   created_at: string
   error?: string | null
 }
@@ -99,7 +99,7 @@ function buildSteps(task: LedgerTask) {
   const steps: { label: string; state: 'done' | 'active' | 'pending' }[] = []
 
   task.step_results.forEach((r, i) => {
-    const cap    = r.capability_id ?? '?'
+    const cap    = r.tool_id ?? '?'
     const action = r.action ?? '?'
     steps.push({
       label: `${cap} / ${action}`,

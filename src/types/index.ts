@@ -64,7 +64,7 @@ export interface Task {
   risk: RiskLevel;
 }
 
-export interface Capability {
+export interface Tool {
   id: string;
   name: string;
   description: string;

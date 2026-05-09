@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import type { SidebarTab } from '../../types'
-import { usePoll } from '../../lib/useEyroWS'
+import { usePoll, apiFetch } from '../../lib/useEyroWS'
 import { clearAuth, clearSession } from '../../lib/auth'
-
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 
 interface LiveSmith {
   id: string
@@ -52,7 +50,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
   const [saveConfirm, setSaveConfirm] = useState(false)
 
   const { data: smithData } = usePoll<{ smiths: LiveSmith[] }>(
-    () => fetch(`${API_BASE}/api/smiths`).then(r => r.json()),
+    () => apiFetch('/api/smiths').then(r => r.json()),
     60000,
   )
   const liveSmiths: LiveSmith[] = smithData?.smiths?.length
@@ -116,7 +114,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
 
         {/* TOOLS */}
         <div className={`s-panel ${activeTab === 'tools' ? 'active' : ''}`}>
-          <div className="s-label">Capability Index</div>
+          <div className="s-label">Tool Index</div>
           {TOOLS.map((t, i) => (
             <div key={t.name} className="tool-card">
               <div className="tool-top">
