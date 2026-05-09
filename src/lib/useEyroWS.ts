@@ -9,21 +9,29 @@ import type { TraceEntry } from '../types'
 import { getSession, getStoredUser } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
-const _FALLBACK_API = API_BASE
 
 function isLocalhost(url: string): boolean {
   try { const h = new URL(url).hostname; return h === 'localhost' || h === '127.0.0.1' || h === '::1' } catch { return false }
 }
 
-function getWsBase(): string {
+function resolveBase(): string {
   const session = getSession()
   const direct = session?.direct_url
   const relay  = session?.relay_url
-  // Prefer relay when direct is localhost (won't be reachable from mobile/remote)
-  const base = (direct && !isLocalhost(direct)) ? direct
-             : (relay  && relay.length > 0)     ? relay
-             : direct || _FALLBACK_API
-  return base.replace(/^http/, 'ws')
+  return (direct && !isLocalhost(direct)) ? direct
+       : (relay  && relay.length > 0)     ? relay
+       : direct || API_BASE
+}
+
+function getWsBase(): string { return resolveBase().replace(/^http/, 'ws') }
+
+export function getApiBase(): string { return resolveBase() }
+
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const base = resolveBase()
+  const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) }
+  if (!isLocalhost(base)) headers['ngrok-skip-browser-warning'] = 'true'
+  return fetch(`${base.replace(/\/$/, '')}${path}`, { ...init, headers })
 }
 
 export interface EyroReply {

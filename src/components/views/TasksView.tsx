@@ -1,6 +1,4 @@
-import { usePoll } from '../../lib/useEyroWS'
-
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
+import { usePoll, apiFetch } from '../../lib/useEyroWS'
 
 interface LedgerTask {
   task_id: string
@@ -26,7 +24,7 @@ function timeLabel(iso: string): string {
 
 export function TasksView() {
   const { data, error } = usePoll<{ tasks: LedgerTask[] }>(
-    () => fetch(`${API_BASE}/api/tasks`).then(r => r.json()),
+    () => apiFetch('/api/tasks').then(r => r.json()),
     5000,
   )
 

@@ -1,6 +1,4 @@
-import { usePoll } from '../../lib/useEyroWS'
-
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
+import { usePoll, apiFetch } from '../../lib/useEyroWS'
 
 interface FoundryEntry {
   id: string
@@ -12,7 +10,7 @@ interface FoundryEntry {
 
 export function FoundryView() {
   const { data } = usePoll<{ entries: FoundryEntry[] }>(
-    () => fetch(`${API_BASE}/api/foundry`).then(r => r.json()),
+    () => apiFetch('/api/foundry').then(r => r.json()),
     30000,
   )
 
