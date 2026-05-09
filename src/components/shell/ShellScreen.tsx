@@ -54,7 +54,7 @@ export function ShellScreen({ user, session }: Props) {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
-  const { send, busy: isBusy } = useEyroWS({
+  const { send, busy: isBusy, connected } = useEyroWS({
     channelId,
     onReply(reply) {
       setMessages(m => [...m, {
@@ -145,8 +145,8 @@ export function ShellScreen({ user, session }: Props) {
 
         <div className="h-center">
           <div className="ctx-pill">
-            <div className={`ctx-dot ${isBusy ? 'run' : 'idle'}`} />
-            EyroOS Dev
+            <div className={`ctx-dot ${!connected ? 'off' : isBusy ? 'run' : 'idle'}`} />
+            {connected ? 'EyroOS Dev' : 'Disconnected'}
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.4 }}>
               <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
@@ -172,7 +172,7 @@ export function ShellScreen({ user, session }: Props) {
 
       {/* Views */}
       <div style={{ flex: 1, display: activeView === 'home' ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-        <HomeView agentName={agentName} userInitial={userInitial} messages={messages} onSend={handleSend} isBusy={isBusy} />
+        <HomeView agentName={agentName} userInitial={userInitial} messages={messages} onSend={handleSend} isBusy={isBusy} connected={connected} />
       </div>
       <div style={{ flex: 1, display: activeView === 'tasks' ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
         <TasksView />

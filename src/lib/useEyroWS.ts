@@ -11,9 +11,18 @@ import { getSession, getStoredUser } from './auth'
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 const _FALLBACK_API = API_BASE
 
+function isLocalhost(url: string): boolean {
+  try { const h = new URL(url).hostname; return h === 'localhost' || h === '127.0.0.1' || h === '::1' } catch { return false }
+}
+
 function getWsBase(): string {
   const session = getSession()
-  const base = session?.direct_url || _FALLBACK_API
+  const direct = session?.direct_url
+  const relay  = session?.relay_url
+  // Prefer relay when direct is localhost (won't be reachable from mobile/remote)
+  const base = (direct && !isLocalhost(direct)) ? direct
+             : (relay  && relay.length > 0)     ? relay
+             : direct || _FALLBACK_API
   return base.replace(/^http/, 'ws')
 }
 

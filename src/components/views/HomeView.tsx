@@ -7,6 +7,7 @@ interface Props {
   messages: ChatMessage[]
   onSend: (text: string) => void
   isBusy: boolean
+  connected: boolean
 }
 
 function nowTime() { return new Date().toTimeString().slice(0, 5) }
@@ -43,7 +44,7 @@ const SUGGESTIONS = [
   'Summarize active priors',
 ]
 
-export function HomeView({ agentName, userInitial, messages, onSend, isBusy }: Props) {
+export function HomeView({ agentName, userInitial, messages, onSend, isBusy, connected }: Props) {
   const [input, setInput] = useState('')
   const chatRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -124,7 +125,7 @@ export function HomeView({ agentName, userInitial, messages, onSend, isBusy }: P
               onChange={autoResize}
               onKeyDown={handleKey}
             />
-            <button className="send-btn" onClick={() => handleSend()}>
+            <button className="send-btn" onClick={() => handleSend()} disabled={!connected} title={connected ? undefined : 'Not connected to OS'}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M2 14L14 8L2 2V7L10 8L2 9V14Z" fill="black"/>
               </svg>
