@@ -207,7 +207,9 @@ export async function confirmBinding(
 // ---------------------------------------------------------------------------
 
 export async function fetchBindingStatus(baseUrl: string): Promise<{ bound: boolean; bound_email?: string }> {
-  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/binding/status`)
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/binding/status`, {
+    headers: { 'ngrok-skip-browser-warning': 'true' },
+  })
   if (!res.ok) throw new Error(`Status check failed (${res.status})`)
   return res.json()
 }
