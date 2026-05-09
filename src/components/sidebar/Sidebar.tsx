@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { SidebarTab } from '../../types'
 import { usePoll } from '../../lib/useEyroWS'
+import { clearAuth, clearSession } from '../../lib/auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8765'
 
@@ -210,6 +211,14 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
             { icon: '👤', name: 'Profile', desc: 'don_vortex' },
             { icon: '🛡', name: 'Glove Integration', desc: 'Connect / manage subscription' },
           ].map(r => <SettingRow key={r.name} {...r} />)}
+
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', marginTop: 16, marginBottom: 4 }}
+            onClick={() => { clearAuth(); clearSession(); window.location.reload() }}
+          >
+            Log out
+          </button>
 
           <div className="s-label" style={{ marginTop: 12 }}>Agent Personality</div>
           <div className="personality-card">
