@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { EyroEye } from '../eye/EyroEye'
 import {
   parseBindPayload, isBindPayloadExpired, deriveConnectionToken,
-  fetchBindingStatus, storeSession,
+  fetchBindingStatus, storeSession, clearAuth, clearSession,
 } from '../../lib/auth'
 import type { AuthUser, OsSession } from '../../lib/auth'
 import '../components.css'
@@ -170,6 +170,14 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
                   Waiting for OS confirmation…
                 </div>
               )}
+
+              <button
+                className="btn-secondary"
+                style={{ marginTop: 20 }}
+                onClick={() => { clearAuth(); clearSession(); window.location.reload() }}
+              >
+                ↩ Retry — scan a new QR
+              </button>
             </>
           )}
         </div>
