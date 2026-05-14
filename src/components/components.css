@@ -355,4 +355,133 @@
 /* ── BIND SCREEN ── */
 .bind-code{display:flex;gap:8px;justify-content:center;margin:20px 0 12px;}
 .bind-digit{width:44px;height:56px;border-radius:10px;background:var(--bg-3);border:1px solid var(--border-hi);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--accent);letter-spacing:0;}
+
+/* ─────────────────────────────────────────────────────────────
+   SPATIAL SHELL  —  3D background + glass overlays
+───────────────────────────────────────────────────────────── */
+
+/* glass token */
+:root {
+  --glass-bg:     rgba(8, 12, 18, 0.62);
+  --glass-border: rgba(200, 220, 255, 0.10);
+  --glass-blur:   blur(18px);
+}
+
+/* ── top bar ── */
+.spatial-topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 20;
+  pointer-events: auto;
+}
+.spatial-icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  color: var(--text-2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.spatial-icon-btn:hover { background: rgba(255,255,255,0.11); color: var(--text-1); }
+.spatial-logo { display: flex; align-items: center; gap: 6px; }
+.spatial-logo-mark {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg,#3b4fff,#a855f7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.spatial-logo-name { font-size: 13px; font-weight: 600; color: var(--text-1); letter-spacing: 0.02em; }
+.spatial-logo-name em { font-style: normal; color: var(--accent); }
+.spatial-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--text-3);
+  margin-left: 8px;
+}
+
+/* ── chat panel (right side) ── */
+.spatial-chat-panel {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  bottom: 68px;
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  border-left: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 10;
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .spatial-chat-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--glass-border);
+  }
+}
+
+/* ── full view overlay (Tasks / Workspace / Foundry / Vault) ── */
+.spatial-view-overlay {
+  position: fixed;
+  top: 52px; left: 0; right: 0; bottom: 68px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── bottom nav pill ── */
+.spatial-nav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: 20;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.spatial-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 12px;
+  background: none;
+  border: none;
+  border-radius: 14px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  min-width: 48px;
+}
+.spatial-nav-btn:hover  { color: var(--text-2); background: rgba(255,255,255,0.05); }
+.spatial-nav-btn.active { color: var(--accent); background: rgba(0,200,150,0.08); }
+.spatial-nav-label { font-size: 9px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; }
 .bind-timer{display:flex;align-items:center;gap:5px;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3);}
