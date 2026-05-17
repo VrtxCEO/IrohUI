@@ -80,7 +80,7 @@ export class SpatialScene {
   private eyeGroup!: THREE.Group
   private glowSprite!: THREE.Sprite
   private eyeCoreGlow!: THREE.Sprite
-  private sclera!: THREE.Mesh
+  private _sclera!: THREE.Mesh
   private irisCarrier!: THREE.Group
   private pupil!: THREE.Mesh
   private topLid!: THREE.Mesh
@@ -88,8 +88,8 @@ export class SpatialScene {
   private modelSlot!: THREE.Group
   private placeholderEyeRoot!: THREE.Group
   private environmentModelSlot!: THREE.Group
-  private environmentRoot: THREE.Object3D | null = null
-  private environmentMode: 'procedural' | 'additive' | 'replacement' = 'procedural'
+  private _environmentRoot: THREE.Object3D | null = null
+  private _environmentMode: 'procedural' | 'additive' | 'replacement' = 'procedural'
   private eyeHitTargets: THREE.Object3D[] = []
   private panelHitTargets: THREE.Object3D[] = []
   private panelObject: THREE.Object3D | null = null
@@ -394,7 +394,7 @@ export class SpatialScene {
     )
     sclera.scale.set(0.98, 0.74, 0.82)
     sclera.position.z = 0.12
-    this.sclera = sclera
+    this._sclera = sclera
 
     const irisCarrier = new THREE.Group()
     irisCarrier.position.z = 0.7
@@ -465,13 +465,13 @@ export class SpatialScene {
 
         const hasAnchors = ['EyeAnchor','CameraTarget'].some(n => gltf.scene.getObjectByName(n))
         const isFullEnv  = hasAnchors || footprint > 8 || this.tempSize.y > 2.5
-        if (isFullEnv) { modelRoot.position.y -= 2.12; this.environmentMode = 'replacement' }
-        else           { modelRoot.position.y -= 1.56; this.environmentMode = 'additive' }
+        if (isFullEnv) { modelRoot.position.y -= 2.12; this._environmentMode = 'replacement' }
+        else           { modelRoot.position.y -= 1.56; this._environmentMode = 'additive' }
 
         this.tryApplySidecarTextures(modelRoot).finally(() => {
           this.environmentModelSlot.add(modelRoot)
           this.environmentLoaded = true
-          this.environmentRoot   = modelRoot
+          this._environmentRoot   = modelRoot
           this.environmentAnchors = {
             EyeAnchor:    modelRoot.getObjectByName('EyeAnchor')    ?? null,
             CameraTarget: modelRoot.getObjectByName('CameraTarget') ?? null,
