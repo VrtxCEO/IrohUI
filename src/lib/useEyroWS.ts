@@ -48,11 +48,13 @@ interface UseEyroWSOptions {
 }
 
 export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOptions) {
-  const wsRef        = useRef<WebSocket | null>(null)
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const mountedRef   = useRef(true)
-  const [connected, setConnected] = useState(false)
-  const [busy, setBusy]           = useState(false)
+  const wsRef          = useRef<WebSocket | null>(null)
+  const reconnectRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mountedRef     = useRef(true)
+  const retryDelayRef  = useRef(0) // 0 = immediate first retry
+  const [connected, setConnected]       = useState(false)
+  const [reconnecting, setReconnecting] = useState(false)
+  const [busy, setBusy]                 = useState(false)
 
   const connect = useCallback(() => {
     if (!mountedRef.current) return
@@ -82,7 +84,11 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
           user_id: storedUser.email,
         }))
       } else if (type === 'session_ok') {
-        if (mountedRef.current) setConnected(true)
+        if (mountedRef.current) {
+          retryDelayRef.current = 0 // reset backoff on successful connect
+          setConnected(true)
+          setReconnecting(false)
+        }
       } else if (type === 'auth_error') {
         setBusy(false)
         onError?.(String(msg['detail'] ?? 'Authentication failed'))
@@ -106,8 +112,11 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
       if (!mountedRef.current) return
       setConnected(false)
       setBusy(false)
-      // Reconnect after 3 s
-      reconnectRef.current = setTimeout(() => { if (mountedRef.current) connect() }, 3000)
+      setReconnecting(true)
+      // Exponential backoff: 0ms → 1s → 2s → 4s → 8s → 10s (cap)
+      const delay = retryDelayRef.current
+      retryDelayRef.current = delay === 0 ? 1000 : Math.min(delay * 2, 10000)
+      reconnectRef.current = setTimeout(() => { if (mountedRef.current) connect() }, delay)
     }
 
     ws.onerror = () => {
@@ -133,7 +142,7 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
     return true
   }, [])
 
-  return { send, connected, busy }
+  return { send, connected, reconnecting, busy }
 }
 
 // ---------------------------------------------------------------------------

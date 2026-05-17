@@ -9,6 +9,8 @@ export type OsState = 'booting' | 'idle' | 'processing' | 'responding' | 'attent
 
 const TEXTURE_ROOT = '/models/DonP'
 const ENVIRONMENT_MODEL_URL = '/models/DonP/DonP_Models.glb'
+const EYE_MODEL_URL = '/models/Eye.glb'
+const EYE_TEXTURE_ROOT = '/models'
 const EYE_POSITION = new THREE.Vector3(0, -2.5, -0.5)
 const EYE_SCALE = 0.3
 
@@ -62,7 +64,7 @@ export class SpatialScene {
   private raycaster     = new THREE.Raycaster()
   private pointerNdc    = new THREE.Vector2()
 
-  private dragState: { pointerId: number; startX: number; startY: number; lastX: number; lastY: number; moved: boolean; hitEye: boolean } | null = null
+  private dragState: { pointerId: number; startX: number; startY: number; lastX: number; lastY: number; moved: boolean; hitEye: boolean; hitPanel: boolean } | null = null
   private touchState: { pinching: boolean; distance: number } | null = null
   private doubleTapTime = 0
 
@@ -89,6 +91,14 @@ export class SpatialScene {
   private environmentRoot: THREE.Object3D | null = null
   private environmentMode: 'procedural' | 'additive' | 'replacement' = 'procedural'
   private eyeHitTargets: THREE.Object3D[] = []
+  private panelHitTargets: THREE.Object3D[] = []
+  private panelObject: THREE.Object3D | null = null
+  private panelLabel: THREE.Sprite | null = null
+  private panelLocalInitPos = new THREE.Vector3()
+  private panelLocalCurrPos = new THREE.Vector3()
+  private panelLocalTargetPos = new THREE.Vector3()
+  private panelActive = false
+  onPanelClick?: () => void
   private environmentAnchors: { EyeAnchor: THREE.Object3D | null; CameraTarget: THREE.Object3D | null } = { EyeAnchor: null, CameraTarget: null }
   private environmentParts: Record<string, THREE.Object3D | null | undefined> = {}
 
@@ -172,6 +182,7 @@ export class SpatialScene {
     setTimeout(() => { this.setRoomWake(1) }, 3000)
 
     this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
+    this.tryLoadEyeModel(EYE_MODEL_URL)
     this.scheduleBlink()
   }
 
@@ -257,7 +268,50 @@ export class SpatialScene {
     return this.raycaster.intersectObjects(this.eyeHitTargets, true).length > 0
   }
 
+  hitTestPanel(clientX: number, clientY: number): boolean {
+    if (!this.panelHitTargets.length) return false
+    const rect = this.canvas.getBoundingClientRect()
+    this.pointerNdc.x =  ((clientX - rect.left) / rect.width)  * 2 - 1
+    this.pointerNdc.y = -((clientY - rect.top)  / rect.height) * 2 + 1
+    this.raycaster.setFromCamera(this.pointerNdc, this.camera)
+    return this.raycaster.intersectObjects(this.panelHitTargets, true).length > 0
+  }
+
+  activatePanel() {
+    const panel = this.panelObject
+    if (!panel?.parent) return
+    panel.parent.updateWorldMatrix(true, false)
+    const localTarget = this.focusPoint.clone()
+    panel.parent.worldToLocal(localTarget)
+    this.panelLocalTargetPos.copy(localTarget)
+    this.panelActive = true
+    if (this.panelLabel) this.panelLabel.visible = false
+  }
+
+  deactivatePanel() {
+    this.panelLocalTargetPos.copy(this.panelLocalInitPos)
+    this.panelActive = false
+    if (this.panelLabel) this.panelLabel.visible = true
+  }
+
   // ─── scene setup ──────────────────────────────────────────────────────────
+
+  private createPanelLabel(): THREE.Sprite {
+    const canvas = document.createElement('canvas')
+    canvas.width = 256; canvas.height = 64
+    const ctx = canvas.getContext('2d')!
+    ctx.clearRect(0, 0, 256, 64)
+    ctx.font = '600 26px system-ui, sans-serif'
+    ctx.fillStyle = 'rgba(140,185,255,0.88)'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('CHAT', 128, 32)
+    const texture = new THREE.CanvasTexture(canvas)
+    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false })
+    const sprite = new THREE.Sprite(mat)
+    sprite.scale.set(0.9, 0.22, 1)
+    return sprite
+  }
 
   private createSharedScene() {
     const topLight    = new THREE.SpotLight(0xa4b1ff, 1.0, 18, Math.PI / 6, 0.4, 2)
@@ -432,6 +486,25 @@ export class SpatialScene {
           }
           const presetName = isFullEnv ? 'fullEnvironment' : 'additiveEnvironment'
           this.applyCompositionPreset(presetName)
+
+          const fp = this.environmentParts['floatingPanel']
+          if (fp) {
+            this.panelObject = fp
+            this.panelLocalInitPos.copy(fp.position)
+            this.panelLocalCurrPos.copy(fp.position)
+            this.panelLocalTargetPos.copy(fp.position)
+            const hits: THREE.Object3D[] = []
+            fp.traverse(n => { if ((n as THREE.Mesh).isMesh) hits.push(n) })
+            this.panelHitTargets = hits.length ? hits : [fp]
+            // "CHAT" label above the panel
+            const box = new THREE.Box3().setFromObject(fp)
+            const size = new THREE.Vector3()
+            box.getSize(size)
+            const label = this.createPanelLabel()
+            label.position.set(0, size.y * 0.5 + 0.28, 0.08)
+            fp.add(label)
+            this.panelLabel = label
+          }
           resolve(true)
         })
       }, undefined, () => resolve(false))
@@ -525,7 +598,7 @@ export class SpatialScene {
     } catch { return false }
 
     return new Promise((resolve) => {
-      this.loader.load(url, (gltf) => {
+      this.loader.load(url, async (gltf) => {
         this.modelSlot.clear()
         const modelRoot = gltf.scene
         this.tempBox.setFromObject(modelRoot)
@@ -535,12 +608,35 @@ export class SpatialScene {
         modelRoot.position.sub(this.tempCenter)
         modelRoot.scale.setScalar(1.7 / maxDim)
         modelRoot.position.z += 0.02
-        modelRoot.traverse(node => {
-          if ((node as THREE.Mesh).isMesh) {
-            const m = (node as THREE.Mesh).material as THREE.MeshStandardMaterial
-            if (m && 'envMapIntensity' in m) m.envMapIntensity = 1.2
-          }
-        })
+
+        // Apply sidecar PBR textures for each eye part
+        const eyeParts = ['Eye', 'Eyelid', 'Eyelid.001']
+        await Promise.all(eyeParts.map(async (partName) => {
+          const node = modelRoot.getObjectByName(partName)
+          if (!node) return
+          const base = `${EYE_TEXTURE_ROOT}/${partName}/${partName}_Bake1_PBR_`
+          const [colorTex, roughTex, metalTex] = await Promise.all([
+            this.textureLoader.loadAsync(base + 'Diffuse.png').catch(() => null),
+            this.textureLoader.loadAsync(base + 'Roughness.png').catch(() => null),
+            this.textureLoader.loadAsync(base + 'Metalness.png').catch(() => null),
+          ])
+          ;[colorTex, roughTex, metalTex].forEach(t => { if (t) t.flipY = false })
+          if (colorTex) colorTex.colorSpace = THREE.SRGBColorSpace
+          node.traverse(child => {
+            if (!(child as THREE.Mesh).isMesh) return
+            const mesh = child as THREE.Mesh
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+            mats.forEach(m => {
+              const mat = m as THREE.MeshStandardMaterial
+              if (colorTex)  mat.map           = colorTex
+              if (roughTex)  mat.roughnessMap  = roughTex
+              if (metalTex)  mat.metalnessMap  = metalTex
+              mat.envMapIntensity = 1.4
+              mat.needsUpdate = true
+            })
+          })
+        }))
+
         this.modelSlot.add(modelRoot)
         this.assetLoaded = true
         this.placeholderEyeRoot.visible = false
@@ -674,6 +770,11 @@ export class SpatialScene {
     this.tempVector.y += this.pointerTarget.y * -0.05
     this.camera.lookAt(this.tempVector)
 
+    if (this.panelObject) {
+      this.panelLocalCurrPos.lerp(this.panelLocalTargetPos, 0.06)
+      this.panelObject.position.copy(this.panelLocalCurrPos)
+    }
+
     this.composer.render()
   }
 
@@ -708,13 +809,14 @@ export class SpatialScene {
 
   private handlePointerDown(e: PointerEvent) {
     this.canvas.setPointerCapture(e.pointerId)
-    const hitEye = this.hitTestEye(e.clientX, e.clientY)
+    const hitEye   = this.hitTestEye(e.clientX, e.clientY)
+    const hitPanel = this.hitTestPanel(e.clientX, e.clientY)
     const rect = this.canvas.getBoundingClientRect()
     this.setPointerTarget(
       (e.clientX - rect.left) / rect.width  - 0.5,
       (e.clientY - rect.top)  / rect.height - 0.5,
     )
-    this.dragState = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false, hitEye }
+    this.dragState = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false, hitEye, hitPanel }
   }
 
   private handlePointerMove(e: PointerEvent) {
@@ -733,7 +835,10 @@ export class SpatialScene {
 
   private handlePointerUp(e: PointerEvent) {
     if (!this.dragState || this.dragState.pointerId !== e.pointerId) return
-    if (!this.dragState.moved && this.dragState.hitEye) this.triggerBlink()
+    if (!this.dragState.moved) {
+      if (this.dragState.hitEye) this.triggerBlink()
+      else if (this.dragState.hitPanel && !this.panelActive) this.onPanelClick?.()
+    }
     this.dragState = null
   }
 

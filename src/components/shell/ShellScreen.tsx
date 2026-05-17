@@ -25,13 +25,15 @@ export function ShellScreen({ user, session }: Props) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [avatarOpen,  setAvatarOpen]  = useState(false)
-  const avatarRef = useRef<HTMLDivElement>(null)
+  const [panelActive, setPanelActive] = useState(false)
+  const avatarRef  = useRef<HTMLDivElement>(null)
+  const swipeRef   = useRef<{ x: number; y: number } | null>(null)
 
   const [activeView, setActiveView] = useState<NavView>('home')
   const [messages,   setMessages]   = useState<ChatMessage[]>([])
   const [personality, setPersonality] = useState('')
 
-  const { send, busy: isBusy, connected } = useEyroWS({
+  const { send, busy: isBusy, connected, reconnecting } = useEyroWS({
     channelId,
     onReply(reply) {
       setMessages(m => [...m, {
@@ -64,13 +66,33 @@ export function ShellScreen({ user, session }: Props) {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
+  // Deactivate panel when leaving home view
+  useEffect(() => { if (activeView !== 'home') setPanelActive(false) }, [activeView])
+
+  function onPanelSwipeStart(e: React.PointerEvent) {
+    swipeRef.current = { x: e.clientX, y: e.clientY }
+  }
+  function onPanelSwipeEnd(e: React.PointerEvent) {
+    if (!swipeRef.current) return
+    const dx = e.clientX - swipeRef.current.x
+    const dy = e.clientY - swipeRef.current.y
+    // Horizontal swipe dismisses the panel
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.4) setPanelActive(false)
+    swipeRef.current = null
+  }
+
   const isHome = activeView === 'home'
 
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
 
       {/* ── 3D scene (full-screen background) ── */}
-      <SceneCanvas osState={osState} connected={connected} />
+      <SceneCanvas
+        osState={osState}
+        connected={connected}
+        panelActive={panelActive}
+        onPanelClick={() => setPanelActive(true)}
+      />
 
       {/* ── Sidebar ── */}
       <div className={`overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} style={{ zIndex: 30 }} />
@@ -96,8 +118,8 @@ export function ShellScreen({ user, session }: Props) {
         </div>
 
         <div className="spatial-status">
-          <div className={`ctx-dot ${!connected ? 'off' : isBusy ? 'run' : 'idle'}`} />
-          <span>{connected ? (isBusy ? 'Thinking…' : 'Connected') : 'Disconnected'}</span>
+          <div className={`ctx-dot ${!connected ? (reconnecting ? 'reconnecting' : 'off') : isBusy ? 'run' : 'idle'}`} />
+          <span>{connected ? (isBusy ? 'Thinking…' : 'Connected') : (reconnecting ? 'Reconnecting…' : 'Disconnected')}</span>
         </div>
 
         <div className="avatar-wrap" ref={avatarRef} style={{ marginLeft: 'auto' }}>
@@ -112,9 +134,17 @@ export function ShellScreen({ user, session }: Props) {
       </div>
 
       {/* ── Main content overlay ── */}
-      {isHome ? (
-        /* Chat panel — right side, glass, over the 3D FloatingPanel area */
-        <div className="spatial-chat-panel">
+      {isHome && panelActive && (
+        /* Chat panel — centered, appears over the 3D FloatingPanel after it moves forward */
+        <div
+          className="spatial-chat-panel"
+          onPointerDown={onPanelSwipeStart}
+          onPointerUp={onPanelSwipeEnd}
+        >
+          <div className="spatial-chat-titlebar">
+            <span className="spatial-chat-title">Chat</span>
+            <button className="spatial-chat-exit" onClick={() => setPanelActive(false)}>Exit</button>
+          </div>
           <HomeView
             agentName={agentName}
             userInitial={userInitial}
@@ -124,7 +154,9 @@ export function ShellScreen({ user, session }: Props) {
             connected={connected}
           />
         </div>
-      ) : (
+      )}
+
+      {!isHome && (
         /* Other views — full glass overlay */
         <div className="spatial-view-overlay">
           {activeView === 'tasks'     && <TasksView />}

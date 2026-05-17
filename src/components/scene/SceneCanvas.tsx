@@ -4,13 +4,14 @@ import { SpatialScene, type OsState } from '../../lib/spatialScene'
 interface Props {
   osState: OsState
   connected: boolean
+  panelActive: boolean
+  onPanelClick: () => void
 }
 
-export function SceneCanvas({ osState, connected }: Props) {
+export function SceneCanvas({ osState, connected, panelActive, onPanelClick }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef  = useRef<SpatialScene | null>(null)
 
-  // init once
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -19,15 +20,19 @@ export function SceneCanvas({ osState, connected }: Props) {
     return () => { scene.destroy(); sceneRef.current = null }
   }, [])
 
-  // sync OS state → eye animation
-  useEffect(() => {
-    sceneRef.current?.setOsState(osState)
-  }, [osState])
+  useEffect(() => { sceneRef.current?.setOsState(osState) },    [osState])
+  useEffect(() => { sceneRef.current?.setConnected(connected) }, [connected])
 
-  // sync WS connection → eye appearance
   useEffect(() => {
-    sceneRef.current?.setConnected(connected)
-  }, [connected])
+    const scene = sceneRef.current
+    if (!scene) return
+    if (panelActive) scene.activatePanel()
+    else             scene.deactivatePanel()
+  }, [panelActive])
+
+  useEffect(() => {
+    if (sceneRef.current) sceneRef.current.onPanelClick = onPanelClick
+  }, [onPanelClick])
 
   return (
     <canvas

@@ -19,6 +19,14 @@ interface LiveTool {
   enabled: boolean
 }
 
+interface RecycleTool {
+  id: string
+  name: string
+  description: string
+  deleted_at: string
+  days_remaining: number
+}
+
 interface TraceEntry {
   tag: string
   message: string
@@ -83,13 +91,31 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
   const [flError, setFlError] = useState('')
   const [flSaving, setFlSaving] = useState(false)
 
+  const [removeTarget, setRemoveTarget] = useState<LiveTool | null>(null)
+  const [removePhrase, setRemovePhrase] = useState('')
+  const [removeTyped, setRemoveTyped] = useState('')
+  const [removeError, setRemoveError] = useState('')
+  const [removing, setRemoving] = useState(false)
+  const [showRecycle, setShowRecycle] = useState(false)
+  const [recycleTools, setRecycleTools] = useState<RecycleTool[]>([])
+  const [restoring, setRestoring] = useState<string | null>(null)
+  const [toolKey, setToolKey] = useState(0)
+  const [recycleKey, setRecycleKey] = useState(0)
+
   const { data: smithData } = usePoll<{ smiths: LiveSmith[] }>(
     () => apiFetch('/api/smiths').then(r => r.json()),
     60000,
   )
+
+  const { data: recycleData } = usePoll<{ tools: RecycleTool[] }>(
+    () => apiFetch('/api/tools/recycle').then(r => r.json()),
+    60000,
+    [recycleKey],
+  )
   const { data: toolData } = usePoll<{ tools: LiveTool[] }>(
     () => apiFetch('/api/tools').then(r => r.json()),
     60000,
+    [toolKey],
   )
   const { data: traceData } = usePoll<{ entries: TraceEntry[] }>(
     () => apiFetch('/api/trace/recent').then(r => r.json()),
@@ -114,6 +140,8 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
 
   const liveSmiths = smithData?.smiths?.length ? smithData.smiths : FALLBACK_SMITHS
   const liveTools = toolData?.tools ?? []
+
+  useEffect(() => { setRecycleTools(recycleData?.tools ?? []) }, [recycleData])
   const traceEntries = traceData?.entries ?? []
   const stats = statsData
 
@@ -134,6 +162,51 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
       setTimeout(() => setSaveConfirm(false), 3000)
     } finally {
       setSavingIdentity(false)
+    }
+  }
+
+  function openRemove(tool: LiveTool) {
+    setRemoveTarget(tool)
+    setRemovePhrase('')
+    setRemoveTyped('')
+    setRemoveError('')
+  }
+
+  async function confirmRemove() {
+    if (!removeTarget) return
+    if (!removePhrase.trim()) { setRemoveError('Admin phrase or PIN is required.'); return }
+    if (removeTyped.trim() !== removeTarget.id) { setRemoveError(`Type "${removeTarget.id}" exactly to confirm.`); return }
+    setRemoving(true)
+    setRemoveError('')
+    try {
+      const res = await apiFetch(`/api/tools/${encodeURIComponent(removeTarget.id)}/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_phrase: removePhrase, typed_id: removeTyped }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setRemoveError(err.detail || 'Removal failed.')
+        return
+      }
+      setRemoveTarget(null)
+      setToolKey(k => k + 1)
+      setRecycleKey(k => k + 1)
+    } catch {
+      setRemoveError('Could not reach OS.')
+    } finally {
+      setRemoving(false)
+    }
+  }
+
+  async function restoreTool(id: string) {
+    setRestoring(id)
+    try {
+      await apiFetch(`/api/tools/${encodeURIComponent(id)}/restore`, { method: 'POST' })
+      setToolKey(k => k + 1)
+      setRecycleKey(k => k + 1)
+    } catch { /* silent */ } finally {
+      setRestoring(null)
     }
   }
 
@@ -217,13 +290,24 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 16, textAlign: 'center' }}>Loading tools…</div>
           )}
           {liveTools.map(t => (
-            <div key={t.id} className="tool-card">
+            <div key={t.id} className="tool-card" style={{ position: 'relative' }}>
               <div className="tool-top">
                 <div className="tool-icon" style={{ background: 'rgba(0,200,150,0.1)' }}>⚙️</div>
                 <div className="tool-info">
                   <div className="tool-name">{t.name || t.id}</div>
                   <div className="tool-desc">{t.description || t.id}</div>
                 </div>
+                <button
+                  onClick={() => openRemove(t)}
+                  title="Remove tool"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: 'var(--text-3)', flexShrink: 0, lineHeight: 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--red, #e05)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-3)')}
+                >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M2 3.5H11M5 3.5V2.5H8V3.5M4.5 3.5V10.5H8.5V3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
               </div>
               <div className="tool-bottom">
                 <span className={`tool-risk ${RISK_CLASS[t.risk_level] ?? 'risk-1'}`}>Risk {t.risk_level}</span>
@@ -233,6 +317,39 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
               </div>
             </div>
           ))}
+
+          {/* Recycle bin */}
+          <div
+            onClick={() => setShowRecycle(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 16, cursor: 'pointer', color: 'var(--text-3)', fontSize: 11, fontFamily: "'JetBrains Mono',monospace", userSelect: 'none' }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ transform: showRecycle ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+              <path d="M3 2L8 5.5L3 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Recycle Bin{recycleTools.length > 0 ? ` · ${recycleTools.length}` : ''}
+          </div>
+
+          {showRecycle && (
+            <div style={{ marginTop: 8 }}>
+              {recycleTools.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--text-3)', padding: '8px 0' }}>Empty — removed tools appear here for 7 days.</div>
+              ) : recycleTools.map(t => (
+                <div key={t.id} style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name || t.id}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-3)', fontFamily: "'JetBrains Mono',monospace", marginTop: 2 }}>{t.days_remaining}d remaining</div>
+                  </div>
+                  <button
+                    onClick={() => restoreTool(t.id)}
+                    disabled={restoring === t.id}
+                    style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', fontSize: 11, color: 'var(--text-1)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    {restoring === t.id ? '…' : 'Restore'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* SMITHS */}
@@ -351,6 +468,50 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
           </div>
         </div>
       </div>
+
+      {/* Tool remove modal */}
+      {removeTarget && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, borderRadius: 'inherit' }}>
+          <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, width: '85%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>Remove Tool</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
+              <strong style={{ color: 'var(--text-1)' }}>{removeTarget.name || removeTarget.id}</strong> will be moved to the Recycle Bin and permanently deleted after 7 days.
+            </div>
+            <input
+              type="password"
+              placeholder="Admin phrase or PIN…"
+              value={removePhrase}
+              onChange={e => setRemovePhrase(e.target.value)}
+              style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', color: 'var(--text-1)', fontSize: 13 }}
+              autoFocus
+            />
+            <input
+              type="text"
+              placeholder={`Type "${removeTarget.id}" to confirm`}
+              value={removeTyped}
+              onChange={e => setRemoveTyped(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && confirmRemove()}
+              style={{ background: 'var(--bg-3)', border: `1px solid ${removeTyped && removeTyped !== removeTarget.id ? 'var(--red, #e05)' : 'var(--border)'}`, borderRadius: 8, padding: '10px 12px', color: 'var(--text-1)', fontSize: 12, fontFamily: "'JetBrains Mono',monospace" }}
+            />
+            {removeError && <div style={{ fontSize: 11, color: 'var(--red, #e05)' }}>{removeError}</div>}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={confirmRemove}
+                disabled={removing}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, background: 'var(--red, #c0392b)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              >
+                {removing ? 'Removing…' : 'Remove Tool'}
+              </button>
+              <button
+                onClick={() => setRemoveTarget(null)}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 8, background: 'var(--bg-3)', border: '1px solid var(--border)', color: 'var(--text-2)', fontSize: 13, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Freedom level auth modal */}
       {flModalOpen && (
