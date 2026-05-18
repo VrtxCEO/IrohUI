@@ -3,6 +3,8 @@ import { EyroEye } from '../eye/EyroEye'
 import { clearAuth, clearSession } from '../../lib/auth'
 import '../components.css'
 
+const BETA_DISCORD_URL = 'https://discord.gg/JrGnAnBwzM'
+
 function BetaModal({ onClose }: { onClose: () => void }) {
   const [accepted, setAccepted] = useState(false)
 
@@ -93,14 +95,19 @@ function BetaModal({ onClose }: { onClose: () => void }) {
           <span>I have read and agree to the Beta NDA &amp; Tester Agreement</span>
         </label>
 
-        <button
+        <a
+          href={accepted ? BETA_DISCORD_URL : undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => { if (!accepted) e.preventDefault() }}
+          style={{
+            display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 12,
+            opacity: accepted ? 1 : 0.35, cursor: accepted ? 'pointer' : 'not-allowed',
+          }}
           className={`btn-primary beta-finished-btn ${!accepted ? 'disabled' : ''}`}
-          type="button"
-          disabled={!accepted}
-          style={{ marginTop: 12, opacity: accepted ? 1 : 0.35, cursor: accepted ? 'pointer' : 'not-allowed' }}
         >
-          Finished
-        </button>
+          Finished — Join the Beta Discord →
+        </a>
       </div>
     </div>
   )
