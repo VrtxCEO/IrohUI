@@ -357,8 +357,12 @@
 .login-beta-divider{display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
 .login-beta-divider::before,.login-beta-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .login-beta-divider span{font-size:11px;color:var(--text-3);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+.login-beta-heading{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--text-2);text-align:center;letter-spacing:0.01em;}
 .btn-join-beta{width:100%;padding:12px;border-radius:11px;background:linear-gradient(135deg,rgba(59,79,255,0.18),rgba(168,85,247,0.18));border:1px solid rgba(168,85,247,0.3);cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#c4b5fd;transition:all 0.15s;}
 .btn-join-beta:hover{background:linear-gradient(135deg,rgba(59,79,255,0.28),rgba(168,85,247,0.28));border-color:rgba(168,85,247,0.5);color:#ddd6fe;}
+.btn-join-beta-locked{opacity:0.5;cursor:not-allowed;}
+.btn-join-beta-locked:hover{background:linear-gradient(135deg,rgba(59,79,255,0.18),rgba(168,85,247,0.18));border-color:rgba(168,85,247,0.3);color:#c4b5fd;}
+.beta-early-msg{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid rgba(168,85,247,0.4);border-radius:8px;padding:6px 14px;font-size:12px;color:#c4b5fd;white-space:nowrap;font-family:'JetBrains Mono',monospace;animation:fadeUp 0.2s both;pointer-events:none;}
 
 /* ── BETA MODAL ── */
 .beta-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s both;}
