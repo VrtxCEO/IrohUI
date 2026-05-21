@@ -23,11 +23,15 @@ export function ShellScreen({ user, session }: Props) {
   const userInitial = (user.name ?? user.email).charAt(0).toUpperCase()
   const channelId   = useMemo(() => session.os_instance_id, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isMobile = useMemo(() => /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches, [])
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [avatarOpen,  setAvatarOpen]  = useState(false)
   const [panelActive, setPanelActive] = useState(false)
-  const avatarRef  = useRef<HTMLDivElement>(null)
-  const swipeRef   = useRef<{ x: number; y: number } | null>(null)
+  const [mobileInput, setMobileInput] = useState('')
+  const avatarRef     = useRef<HTMLDivElement>(null)
+  const swipeRef      = useRef<{ x: number; y: number } | null>(null)
+  const mobileChatRef = useRef<HTMLDivElement>(null)
 
   const [activeView, setActiveView] = useState<NavView>('home')
   const [messages,   setMessages]   = useState<ChatMessage[]>([])
@@ -69,6 +73,11 @@ export function ShellScreen({ user, session }: Props) {
   // Deactivate panel when leaving home view
   useEffect(() => { if (activeView !== 'home') setPanelActive(false) }, [activeView])
 
+  // Auto-scroll mobile messages
+  useEffect(() => {
+    if (mobileChatRef.current) mobileChatRef.current.scrollTop = mobileChatRef.current.scrollHeight
+  }, [messages])
+
   function onPanelSwipeStart(e: React.PointerEvent) {
     swipeRef.current = { x: e.clientX, y: e.clientY }
   }
@@ -79,6 +88,12 @@ export function ShellScreen({ user, session }: Props) {
     // Horizontal swipe dismisses the panel
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.4) setPanelActive(false)
     swipeRef.current = null
+  }
+
+  function handleMobileSend() {
+    if (!mobileInput.trim() || isBusy) return
+    handleSend(mobileInput)
+    setMobileInput('')
   }
 
   const isHome = activeView === 'home'
@@ -164,6 +179,44 @@ export function ShellScreen({ user, session }: Props) {
           {activeView === 'foundry'   && <FoundryView />}
           {activeView === 'vault'     && <VaultView onVaultStateChange={() => {}} />}
         </div>
+      )}
+
+      {/* ── Mobile chat (thin bar above nav, messages float over eye) ── */}
+      {isHome && isMobile && (
+        <>
+          {messages.length > 0 && (
+            <div className="mobile-messages" ref={mobileChatRef}>
+              {messages.map(msg => (
+                <div key={msg.id} className={`mobile-msg mobile-msg-${msg.role}`}>
+                  {msg.text}
+                </div>
+              ))}
+              {isBusy && (
+                <div className="mobile-msg mobile-msg-assistant mobile-msg-thinking">thinking…</div>
+              )}
+            </div>
+          )}
+          <div className="mobile-input-bar">
+            <input
+              className="mobile-input"
+              type="text"
+              placeholder="Message Eyro…"
+              value={mobileInput}
+              onChange={e => setMobileInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleMobileSend() }}
+              disabled={isBusy}
+            />
+            <button
+              className="mobile-send-btn"
+              onClick={handleMobileSend}
+              disabled={isBusy || !mobileInput.trim() || !connected}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 14L14 8L2 2V7L10 8L2 9V14Z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+        </>
       )}
 
       {/* ── Bottom nav — glassy icon pill ── */}
