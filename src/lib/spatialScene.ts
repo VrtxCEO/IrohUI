@@ -190,7 +190,7 @@ export class SpatialScene {
     // Defer model loads so the first frame renders before heavy allocations
     const modelLoadDelay = this.isMobile ? 800 : 0
     setTimeout(() => {
-      this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
+      if (!this.isMobile) this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
       this.tryLoadEyeModel(EYE_MODEL_URL)
     }, modelLoadDelay)
     this.scheduleBlink()
