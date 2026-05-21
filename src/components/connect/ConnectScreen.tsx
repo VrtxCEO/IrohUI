@@ -3,7 +3,7 @@ import { EyroEye } from '../eye/EyroEye'
 import { clearAuth, clearSession } from '../../lib/auth'
 import '../components.css'
 
-const BETA_DISCORD_URL = 'https://discord.gg/JrGnAnBwzM'
+const BETA_DISCORD_URL = 'https://discord.gg/2WNKQY8wdc'
 
 function BetaModal({ onClose }: { onClose: () => void }) {
   const [accepted, setAccepted] = useState(false)
