@@ -642,7 +642,12 @@ export class SpatialScene {
               if (colorTex)  mat.map           = colorTex
               if (roughTex)  mat.roughnessMap  = roughTex
               if (metalTex)  mat.metalnessMap  = metalTex
-              mat.envMapIntensity = 1.4
+              mat.envMapIntensity = this.isMobile ? 2.8 : 1.4
+              // On mobile boost emissive to compensate for missing bloom
+              if (this.isMobile && partName === 'Eye') {
+                mat.emissive = new THREE.Color(0x1a7fff)
+                mat.emissiveIntensity = 0.55
+              }
               mat.needsUpdate = true
             })
           })
