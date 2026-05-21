@@ -45,13 +45,15 @@ interface UseEyroWSOptions {
   onReply: (reply: EyroReply) => void
   onError?: (detail: string) => void
   onBusy?: () => void
+  onSessionInvalid?: () => void
 }
 
-export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOptions) {
+export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvalid }: UseEyroWSOptions) {
   const wsRef          = useRef<WebSocket | null>(null)
   const reconnectRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef     = useRef(true)
   const retryDelayRef  = useRef(0) // 0 = immediate first retry
+  const sessionInvalidRef = useRef(false)
   const [connected, setConnected]       = useState(false)
   const [reconnecting, setReconnecting] = useState(false)
   const [busy, setBusy]                 = useState(false)
@@ -91,8 +93,9 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
         }
       } else if (type === 'auth_error') {
         setBusy(false)
-        onError?.(String(msg['detail'] ?? 'Authentication failed'))
+        sessionInvalidRef.current = true // stop retry loop before close
         ws.close()
+        onSessionInvalid?.()
       } else if (type === 'reply') {
         setBusy(false)
         onReply({
@@ -109,7 +112,7 @@ export function useEyroWS({ channelId, onReply, onError, onBusy }: UseEyroWSOpti
     }
 
     ws.onclose = () => {
-      if (!mountedRef.current) return
+      if (!mountedRef.current || sessionInvalidRef.current) return
       setConnected(false)
       setBusy(false)
       setReconnecting(true)

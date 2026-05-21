@@ -46,6 +46,10 @@ export function ShellScreen({ user, session }: Props) {
         taskId: reply.taskId ?? undefined,
       }])
     },
+    onSessionInvalid() {
+      clearSession()
+      window.location.reload()
+    },
   })
 
   // Map WS state → spatial eye state
