@@ -13,6 +13,16 @@ interface KeepStatus {
   initialized: boolean
   open: boolean
   file_count: number
+  lockout_active: boolean
+  lockout_seconds_remaining: number
+  escalation_level: number
+}
+
+function fmtSecs(s: number): string {
+  if (s <= 0) return '0s'
+  if (s >= 3600) { const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); return m ? `${h}h ${m}m` : `${h}h` }
+  const m = Math.floor(s / 60); const sec = s % 60
+  return m ? (sec ? `${m}m ${sec}s` : `${m}m`) : `${sec}s`
 }
 
 function relativeTime(iso: string): string {
@@ -70,13 +80,21 @@ export function VaultView({ onVaultStateChange }: { onVaultStateChange?: (open: 
     } catch {}
   }
 
+  const pollInterval = status?.lockout_active ? 5000 : 15000
   useEffect(() => {
     fetchStatus()
-    const id = setInterval(fetchStatus, 15000)
+    const id = setInterval(fetchStatus, pollInterval)
     return () => clearInterval(id)
-  }, [])
+  }, [pollInterval])
 
-  function openModal() { setModalOpen(true); setError(''); setPhrase(''); setPin('') }
+  function openModal() {
+    setModalOpen(true)
+    setPhrase('')
+    setPin('')
+    setError(status?.lockout_active
+      ? `Too many failed attempts. Try again in ${fmtSecs(status.lockout_seconds_remaining)}.`
+      : '')
+  }
   function closeModal() { setModalOpen(false) }
 
   async function attemptUnlock() {
@@ -94,7 +112,7 @@ export function VaultView({ onVaultStateChange }: { onVaultStateChange?: (open: 
         setError((data as any).detail || 'Incorrect phrase or PIN.')
         return
       }
-      setStatus(s => s ? { ...s, open: true } : { initialized: true, open: true, file_count: 0 })
+      setStatus(s => s ? { ...s, open: true } : { initialized: true, open: true, file_count: 0, lockout_active: false, lockout_seconds_remaining: 0, escalation_level: 0 })
       setModalOpen(false)
       onVaultStateChange?.(true)
       await fetchFiles()
@@ -179,7 +197,16 @@ export function VaultView({ onVaultStateChange }: { onVaultStateChange?: (open: 
               {fileCount} encrypted file{fileCount !== 1 ? 's' : ''}
             </div>
           </div>
-          <button className="btn-vault-open" onClick={openModal}>Open Vault Session</button>
+          {status?.lockout_active && (
+            <div style={{
+              marginBottom: 12, padding: '8px 14px', borderRadius: 8,
+              background: 'rgba(220,60,60,0.08)', border: '1px solid rgba(220,60,60,0.25)',
+              fontSize: 11.5, color: 'var(--red)', fontFamily: "'JetBrains Mono',monospace",
+            }}>
+              Too many failed attempts — locked for {fmtSecs(status.lockout_seconds_remaining)}
+            </div>
+          )}
+          <button className="btn-vault-open" onClick={openModal} disabled={status?.lockout_active}>Open Vault Session</button>
         </div>
       ) : (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -260,8 +287,13 @@ export function VaultView({ onVaultStateChange }: { onVaultStateChange?: (open: 
             </div>
           </div>
           <div className="modal-error">{error}</div>
-          <button className="btn-vault-unlock" onClick={attemptUnlock} style={unlocking ? { opacity: 0.6 } : {}}>
-            {unlocking ? 'Decrypting…' : 'Unlock Vault'}
+          <button
+            className="btn-vault-unlock"
+            onClick={attemptUnlock}
+            disabled={unlocking || !!status?.lockout_active}
+            style={(unlocking || status?.lockout_active) ? { opacity: 0.5 } : {}}
+          >
+            {unlocking ? 'Decrypting…' : status?.lockout_active ? `Locked — ${fmtSecs(status.lockout_seconds_remaining)}` : 'Unlock Vault'}
           </button>
           <button className="btn-vault-cancel" onClick={closeModal}>Cancel</button>
         </div>

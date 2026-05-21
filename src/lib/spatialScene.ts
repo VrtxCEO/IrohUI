@@ -100,6 +100,8 @@ export class SpatialScene {
   private environmentAnchors: { EyeAnchor: THREE.Object3D | null; CameraTarget: THREE.Object3D | null } = { EyeAnchor: null, CameraTarget: null }
   private environmentParts: Record<string, THREE.Object3D | null | undefined> = {}
 
+  private isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches
+
   private tempBox    = new THREE.Box3()
   private tempSize   = new THREE.Vector3()
   private tempCenter = new THREE.Vector3()
@@ -143,7 +145,7 @@ export class SpatialScene {
     this.startTime = performance.now() * 0.001
     this.lastFrameTime = this.startTime
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' })
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !this.isMobile, alpha: true, powerPreference: 'high-performance' })
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1.05
@@ -154,10 +156,12 @@ export class SpatialScene {
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100)
     this.camera.position.set(0, 0.3, 7.25)
 
-    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.45, 0.5, 0.6)
     this.composer = new EffectComposer(this.renderer)
     this.composer.addPass(new RenderPass(this.scene, this.camera))
-    this.composer.addPass(bloom)
+    if (!this.isMobile) {
+      const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.45, 0.5, 0.6)
+      this.composer.addPass(bloom)
+    }
     this.composer.addPass(new OutputPass())
 
     const p = this.compositionPresets.procedural
@@ -179,9 +183,13 @@ export class SpatialScene {
     setTimeout(() => { this.setEyeOpenTarget(1) }, 2200)
     setTimeout(() => { this.setRoomWake(1) }, 3000)
 
-    this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
-    this.tryLoadEyeModel(EYE_MODEL_URL)
+    if (!this.isMobile) {
+      this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
+      this.tryLoadEyeModel(EYE_MODEL_URL)
+    }
     this.scheduleBlink()
+
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.renderer.setAnimationLoop(null) }, false)
   }
 
   destroy() {
@@ -253,7 +261,7 @@ export class SpatialScene {
     const h = this.canvas.clientHeight
     this.camera.aspect = w / h
     this.camera.updateProjectionMatrix()
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8))
+    this.renderer.setPixelRatio(this.isMobile ? 1 : Math.min(window.devicePixelRatio, 1.8))
     this.renderer.setSize(w, h, false)
     this.composer.setSize(w, h)
   }
