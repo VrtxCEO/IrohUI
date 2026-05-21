@@ -137,10 +137,12 @@ export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvali
     }
   }, [connect])
 
-  const send = useCallback((text: string) => {
+  const send = useCallback((text: string, threadId?: string) => {
     const ws = wsRef.current
     if (!ws || ws.readyState !== WebSocket.OPEN) return false
-    ws.send(JSON.stringify({ type: 'message', text }))
+    const msg: Record<string, unknown> = { type: 'message', text }
+    if (threadId) msg.thread_id = threadId
+    ws.send(JSON.stringify(msg))
     setBusy(true)
     return true
   }, [])

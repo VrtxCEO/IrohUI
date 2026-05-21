@@ -8,7 +8,7 @@ import { TasksView } from '../views/TasksView'
 import { WorkspaceView } from '../views/WorkspaceView'
 import { FoundryView } from '../views/FoundryView'
 import { VaultView } from '../views/VaultView'
-import { useEyroWS } from '../../lib/useEyroWS'
+import { useEyroWS, apiFetch } from '../../lib/useEyroWS'
 import { SceneCanvas } from '../scene/SceneCanvas'
 import type { OsState } from '../../lib/spatialScene'
 import '../components.css'
@@ -17,6 +17,24 @@ interface Props { user: AuthUser; session: OsSession }
 
 function nowTime() { return new Date().toTimeString().slice(0, 5) }
 function uid()     { return Math.random().toString(36).slice(2) }
+
+interface Thread {
+  thread_id: string
+  title: string
+  created_at: number
+  updated_at: number
+  message_count: number
+}
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts * 1000
+  const mins = Math.floor(diff / 60000)
+  if (mins < 2) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
 
 export function ShellScreen({ user, session }: Props) {
   const agentName   = 'Eyro'
@@ -36,6 +54,61 @@ export function ShellScreen({ user, session }: Props) {
   const [activeView, setActiveView] = useState<NavView>('home')
   const [messages,   setMessages]   = useState<ChatMessage[]>([])
   const [personality, setPersonality] = useState('')
+
+  const [threads, setThreads]               = useState<Thread[]>([])
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [threadPanelOpen, setThreadPanelOpen] = useState(false)
+
+  async function loadThreads() {
+    try {
+      const res = await apiFetch('/api/threads')
+      const d = await res.json()
+      setThreads(d.threads ?? [])
+    } catch {}
+  }
+
+  async function newThread() {
+    if (threads.length >= 10) return
+    try {
+      const res = await apiFetch('/api/threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'New Thread' }),
+      })
+      const t: Thread = await res.json()
+      setThreads(prev => [t, ...prev])
+      setActiveThreadId(t.thread_id)
+      setMessages([])
+      setThreadPanelOpen(false)
+    } catch {}
+  }
+
+  async function switchThread(threadId: string) {
+    setActiveThreadId(threadId)
+    setThreadPanelOpen(false)
+    try {
+      const res = await apiFetch(`/api/threads/${encodeURIComponent(threadId)}/messages`)
+      const d = await res.json()
+      const msgs: ChatMessage[] = (d.messages ?? []).map((m: { role: string; text: string; ts: number }) => ({
+        id: uid(),
+        role: m.role as 'user' | 'assistant',
+        text: m.text,
+        timestamp: new Date(m.ts * 1000).toTimeString().slice(0, 5),
+      }))
+      setMessages(msgs)
+    } catch {}
+  }
+
+  async function deleteThread(threadId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    try {
+      await apiFetch(`/api/threads/${encodeURIComponent(threadId)}`, { method: 'DELETE' })
+      setThreads(prev => prev.filter(t => t.thread_id !== threadId))
+      if (activeThreadId === threadId) { setActiveThreadId(null); setMessages([]) }
+    } catch {}
+  }
+
+  useEffect(() => { loadThreads() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { send, busy: isBusy, connected, reconnecting } = useEyroWS({
     channelId,
@@ -61,8 +134,8 @@ export function ShellScreen({ user, session }: Props) {
   const handleSend = useCallback((text: string) => {
     if (isBusy) return
     setMessages(m => [...m, { id: uid(), role: 'user', text, timestamp: nowTime() }])
-    send(text)
-  }, [isBusy, send])
+    send(text, activeThreadId ?? undefined)
+  }, [isBusy, send, activeThreadId])
 
   function handleLogout() { clearAuth(); clearSession(); window.location.reload() }
 
@@ -171,6 +244,8 @@ export function ShellScreen({ user, session }: Props) {
             onSend={handleSend}
             isBusy={isBusy}
             connected={connected}
+            activeThreadId={activeThreadId}
+            onToggleThreadPanel={() => setThreadPanelOpen(p => !p)}
           />
         </div>
       )}
@@ -182,6 +257,41 @@ export function ShellScreen({ user, session }: Props) {
           {activeView === 'workspace' && <WorkspaceView />}
           {activeView === 'foundry'   && <FoundryView />}
           {activeView === 'vault'     && <VaultView onVaultStateChange={() => {}} />}
+        </div>
+      )}
+
+      {/* ── Thread panel ── */}
+      {threadPanelOpen && (
+        <div className="thread-panel-backdrop" onClick={() => setThreadPanelOpen(false)}>
+          <div className="thread-panel-card" onClick={e => e.stopPropagation()}>
+            <div className="thread-panel-header">
+              <span className="thread-panel-title">Threads</span>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button className="thread-new-btn" onClick={newThread} disabled={threads.length >= 10}>+ New</button>
+                <button className="thread-close-btn" onClick={() => setThreadPanelOpen(false)}>✕</button>
+              </div>
+            </div>
+            <div className="thread-list">
+              {threads.length === 0 ? (
+                <div className="thread-empty">No threads yet — start a new one.</div>
+              ) : threads.map(t => (
+                <div
+                  key={t.thread_id}
+                  className={`thread-item ${activeThreadId === t.thread_id ? 'active' : ''}`}
+                  onClick={() => switchThread(t.thread_id)}
+                >
+                  <div className="thread-item-main">
+                    <div className="thread-item-title">{t.title}</div>
+                    <div className="thread-item-meta">
+                      <span>{timeAgo(t.updated_at)}</span>
+                      <span>{t.message_count} turn{t.message_count !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  <button className="thread-delete-btn" onClick={e => deleteThread(t.thread_id, e)}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -201,6 +311,15 @@ export function ShellScreen({ user, session }: Props) {
             </div>
           )}
           <div className="mobile-input-bar">
+            <button
+              className="mobile-threads-btn"
+              onClick={() => setThreadPanelOpen(p => !p)}
+              title="Threads"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M1 3h14M1 8h10M1 13h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
             <input
               className="mobile-input"
               type="text"

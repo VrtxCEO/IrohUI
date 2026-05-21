@@ -285,6 +285,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
 
         {/* TOOLS */}
         <div className={`s-panel ${activeTab === 'tools' ? 'active' : ''}`}>
+          <a href="https://theforge-dlf3.onrender.com/" target="_blank" rel="noopener noreferrer" className="forge-pill">Check Forge ↗</a>
           <div className="s-label">Tool Index · {liveTools.length} registered</div>
           {liveTools.length === 0 && (
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 16, textAlign: 'center' }}>Loading tools…</div>
@@ -354,6 +355,7 @@ export function Sidebar({ open, onClose, agentName, personality, onPersonalitySa
 
         {/* SMITHS */}
         <div className={`s-panel ${activeTab === 'smiths' ? 'active' : ''}`}>
+          <a href="https://theforge-dlf3.onrender.com/" target="_blank" rel="noopener noreferrer" className="forge-pill">Check Forge ↗</a>
           <div className="s-label">Available Smiths</div>
           {liveSmiths.map(s => {
             const active = smithActive[s.id] ?? true

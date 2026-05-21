@@ -8,6 +8,8 @@ interface Props {
   onSend: (text: string) => void
   isBusy: boolean
   connected: boolean
+  activeThreadId: string | null
+  onToggleThreadPanel: () => void
 }
 
 function nowTime() { return new Date().toTimeString().slice(0, 5) }
@@ -44,7 +46,7 @@ const SUGGESTIONS = [
   'Summarize active priors',
 ]
 
-export function HomeView({ agentName, userInitial, messages, onSend, isBusy, connected }: Props) {
+export function HomeView({ agentName, userInitial, messages, onSend, isBusy, connected, activeThreadId, onToggleThreadPanel }: Props) {
   const [input, setInput] = useState('')
   const chatRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -140,7 +142,18 @@ export function HomeView({ agentName, userInitial, messages, onSend, isBusy, con
               Trace on
             </div>
             <div className="input-sep"/>
-            <div className="input-footer-btn">EyroOS Dev</div>
+            <div className="input-footer-btn">EyroOS</div>
+            <div className="input-sep"/>
+            <div
+              className="input-footer-btn"
+              onClick={onToggleThreadPanel}
+              style={{ color: activeThreadId ? 'var(--accent)' : undefined }}
+            >
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path d="M1 2.5h10M1 6h7M1 9.5h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              {activeThreadId ? 'Thread active' : 'Threads'}
+            </div>
             <span style={{ marginLeft: 'auto' }}>⇧ Enter for new line</span>
           </div>
         </div>
