@@ -156,7 +156,11 @@ export class SpatialScene {
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100)
     this.camera.position.set(0, 0.3, 7.25)
 
-    this.composer = new EffectComposer(this.renderer)
+    // On mobile use HalfFloatType to halve framebuffer memory usage
+    const composerTarget = this.isMobile
+      ? new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, { type: THREE.HalfFloatType })
+      : undefined
+    this.composer = composerTarget ? new EffectComposer(this.renderer, composerTarget) : new EffectComposer(this.renderer)
     this.composer.addPass(new RenderPass(this.scene, this.camera))
     if (!this.isMobile) {
       const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.45, 0.5, 0.6)
@@ -183,10 +187,12 @@ export class SpatialScene {
     setTimeout(() => { this.setEyeOpenTarget(1) }, 2200)
     setTimeout(() => { this.setRoomWake(1) }, 3000)
 
-    if (!this.isMobile) {
+    // Defer model loads so the first frame renders before heavy allocations
+    const modelLoadDelay = this.isMobile ? 800 : 0
+    setTimeout(() => {
       this.tryLoadEnvironmentModel(ENVIRONMENT_MODEL_URL)
       this.tryLoadEyeModel(EYE_MODEL_URL)
-    }
+    }, modelLoadDelay)
     this.scheduleBlink()
 
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.renderer.setAnimationLoop(null) }, false)
