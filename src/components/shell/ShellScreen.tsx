@@ -8,7 +8,10 @@ import { TasksView } from '../views/TasksView'
 import { WorkspaceView } from '../views/WorkspaceView'
 import { FoundryView } from '../views/FoundryView'
 import { VaultView } from '../views/VaultView'
+import { MintView } from '../views/MintView'
+import { AuthOverlay } from './AuthOverlay'
 import { useEyroWS, apiFetch } from '../../lib/useEyroWS'
+import type { AuthChallenge } from '../../lib/useEyroWS'
 import { SceneCanvas } from '../scene/SceneCanvas'
 import type { OsState } from '../../lib/spatialScene'
 import '../components.css'
@@ -51,9 +54,10 @@ export function ShellScreen({ user, session }: Props) {
   const swipeRef      = useRef<{ x: number; y: number } | null>(null)
   const mobileChatRef = useRef<HTMLDivElement>(null)
 
-  const [activeView, setActiveView] = useState<NavView>('home')
-  const [messages,   setMessages]   = useState<ChatMessage[]>([])
-  const [personality, setPersonality] = useState('')
+  const [activeView, setActiveView]       = useState<NavView>('home')
+  const [messages,   setMessages]         = useState<ChatMessage[]>([])
+  const [personality, setPersonality]     = useState('')
+  const [authChallenge, setAuthChallenge] = useState<AuthChallenge | null>(null)
 
   const [threads, setThreads]               = useState<Thread[]>([])
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
@@ -110,7 +114,7 @@ export function ShellScreen({ user, session }: Props) {
 
   useEffect(() => { loadThreads() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { send, busy: isBusy, connected, reconnecting } = useEyroWS({
+  const { send, busy: isBusy, connected, reconnecting, wsRef } = useEyroWS({
     channelId,
     onReply(reply) {
       setMessages(m => [...m, {
@@ -122,6 +126,9 @@ export function ShellScreen({ user, session }: Props) {
     onSessionInvalid() {
       clearSession()
       window.location.reload()
+    },
+    onAuthChallenge(challenge) {
+      setAuthChallenge(challenge)
     },
   })
 
@@ -257,8 +264,16 @@ export function ShellScreen({ user, session }: Props) {
           {activeView === 'workspace' && <WorkspaceView />}
           {activeView === 'foundry'   && <FoundryView />}
           {activeView === 'vault'     && <VaultView onVaultStateChange={() => {}} />}
+          {activeView === 'mint'      && <MintView />}
         </div>
       )}
+
+      {/* Auth challenge overlay */}
+      <AuthOverlay
+        challenge={authChallenge}
+        wsRef={wsRef}
+        onClose={() => setAuthChallenge(null)}
+      />
 
       {/* ── Thread panel ── */}
       {threadPanelOpen && (
@@ -358,6 +373,14 @@ export function ShellScreen({ user, session }: Props) {
         </NavBtn>
         <NavBtn id="vault"     label="Vault"     active={activeView === 'vault'}     onClick={() => setActiveView('vault')}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="6" width="16" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M6 6V4.5a4 4 0 018 0V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="10" cy="12" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M10 14v1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </NavBtn>
+        <NavBtn id="mint"      label="Mint"      active={activeView === 'mint'}      onClick={() => setActiveView('mint')}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M8.5 5C8.5 5 9 3.5 10 3.5C11 3.5 11.5 5 11.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 9C6 7.3 7.5 6 10 6C12.5 6 14 7.3 14 9C14 13.5 12.5 16.5 10 16.5C7.5 16.5 6 13.5 6 9Z" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M10 9.5V14.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+            <path d="M8.5 11C8.5 10.2 9.2 9.5 10 9.5C10.8 9.5 11.5 10.2 11.5 11C11.5 11.8 10.8 12 10 12.5C9.2 13 8.5 13.2 8.5 14C8.5 14.8 9.2 15.5 10 15.5C10.8 15.5 11.5 14.8 11.5 14" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
         </NavBtn>
       </nav>
 

@@ -8,7 +8,7 @@ export interface AuthUser {
   role: string
 }
 export type AuthOption = 'none' | 'pin' | 'password' | '2fa';
-export type NavView = 'home' | 'tasks' | 'workspace' | 'foundry' | 'vault';
+export type NavView = 'home' | 'tasks' | 'workspace' | 'foundry' | 'vault' | 'mint';
 export type SidebarTab = 'trace' | 'tools' | 'smiths' | 'growth' | 'settings';
 export type TraceTag = 'OBSERVE' | 'DECIDE' | 'ACTION' | 'ESCALATE' | 'COMPLETE';
 export type TaskStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';

@@ -40,15 +40,22 @@ export interface EyroReply {
   taskId: string | null
 }
 
+export interface AuthChallenge {
+  required_methods: string[]
+  original_goal?: string
+  risk_level?: number
+}
+
 interface UseEyroWSOptions {
   channelId: string
   onReply: (reply: EyroReply) => void
   onError?: (detail: string) => void
   onBusy?: () => void
   onSessionInvalid?: () => void
+  onAuthChallenge?: (challenge: AuthChallenge) => void
 }
 
-export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvalid }: UseEyroWSOptions) {
+export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvalid, onAuthChallenge }: UseEyroWSOptions) {
   const wsRef          = useRef<WebSocket | null>(null)
   const reconnectRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef     = useRef(true)
@@ -96,6 +103,13 @@ export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvali
         sessionInvalidRef.current = true // stop retry loop before close
         ws.close()
         onSessionInvalid?.()
+      } else if (type === 'auth_challenge') {
+        setBusy(false)
+        onAuthChallenge?.({
+          required_methods: (msg['required_methods'] as string[]) ?? [],
+          original_goal: msg['original_goal'] as string | undefined,
+          risk_level: msg['risk_level'] as number | undefined,
+        })
       } else if (type === 'reply') {
         setBusy(false)
         onReply({
@@ -147,7 +161,7 @@ export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvali
     return true
   }, [])
 
-  return { send, connected, reconnecting, busy }
+  return { send, connected, reconnecting, busy, wsRef }
 }
 
 // ---------------------------------------------------------------------------
