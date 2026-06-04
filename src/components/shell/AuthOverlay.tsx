@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { AuthChallenge } from '../../lib/useEyroWS'
-import { apiFetch, getApiBase } from '../../lib/useEyroWS'
+import { apiFetch } from '../../lib/useEyroWS'
 
 interface Props {
   challenge: AuthChallenge | null
