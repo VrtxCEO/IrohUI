@@ -112,6 +112,15 @@ export function useEyroWS({ channelId, onReply, onError, onBusy, onSessionInvali
         })
       } else if (type === 'reply') {
         setBusy(false)
+        // auth_challenge may be embedded in the reply payload
+        if (msg['auth_challenge'] && typeof msg['auth_challenge'] === 'object') {
+          const ch = msg['auth_challenge'] as Record<string, unknown>
+          onAuthChallenge?.({
+            required_methods: (ch['required_methods'] as string[]) ?? [],
+            original_goal: ch['original_goal'] as string | undefined,
+            risk_level: ch['risk_level'] as number | undefined,
+          })
+        }
         onReply({
           text: String(msg['text'] ?? ''),
           trace: (msg['trace'] as TraceEntry[]) ?? [],
