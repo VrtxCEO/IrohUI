@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EyroEye } from '../eye/EyroEye'
+import eyroEyeSrc from '../../assets/eyro_eye.svg'
 import { loginUser, registerUser, storeToken, storeSession } from '../../lib/auth'
 import type { AuthUser } from '../../lib/auth'
 import '../components.css'
@@ -73,7 +74,7 @@ export function LoginScreen({ onLogin }: Props) {
 
         <div className="ob-card">
           <div className="ob-logo">
-            <div className="ob-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="ob-logo-eye" alt="" />
             <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 

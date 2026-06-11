@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EyroEye } from '../eye/EyroEye'
+import eyroEyeSrc from '../../assets/eyro_eye.svg'
 import { clearAuth, clearSession } from '../../lib/auth'
 import '../components.css'
 
@@ -13,7 +14,7 @@ function BetaModal({ onClose }: { onClose: () => void }) {
       <div className="beta-modal" onClick={e => e.stopPropagation()}>
         <div className="beta-modal-header">
           <div className="ob-logo" style={{ marginBottom: 0 }}>
-            <div className="ob-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="ob-logo-eye" alt="" />
             <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
           <button className="beta-close-btn" onClick={onClose} aria-label="Close">
@@ -130,7 +131,7 @@ export function ConnectScreen() {
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
-            <div className="ob-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="ob-logo-eye" alt="" />
             <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
           <div className="ob-eyebrow">No OS linked</div>

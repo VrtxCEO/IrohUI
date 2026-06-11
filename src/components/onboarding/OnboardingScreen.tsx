@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { OnboardingData, RiskLevel, AuthOption, FreedomLevel } from '../../types'
 import { EyroEye } from '../eye/EyroEye'
+import eyroEyeSrc from '../../assets/eyro_eye.svg'
 import '../components.css'
 
 interface Props { onLaunch: (data: OnboardingData) => void }
@@ -70,7 +71,7 @@ export function OnboardingScreen({ onLaunch }: Props) {
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
-            <div className="ob-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="ob-logo-eye" alt="" />
             <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 

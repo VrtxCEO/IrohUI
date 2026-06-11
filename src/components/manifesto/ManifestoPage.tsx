@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { EyroEye } from '../eye/EyroEye'
 import { GiscusComments } from './GiscusComments'
 import type { EyeState } from '../eye/EyroEye'
+import eyroEyeSrc from '../../assets/eyro_eye.svg'
 
 interface FloatingEye {
   state: EyeState
@@ -78,7 +79,7 @@ export function ManifestoPage() {
       <header className="mf-header">
         <div className="mf-header-inner">
           <a href="/" className="mf-logo">
-            <div className="mf-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="mf-logo-eye" alt="Eyro" />
             <span className="mf-logo-name">eyro<span>OS</span></span>
           </a>
           <nav className="mf-header-nav">
@@ -787,7 +788,7 @@ Breath  →  Kernel Daemon / Cron Scheduler
         {/* ── FOOTER ── */}
         <footer className="mf-footer">
           <div className="mf-footer-logo">
-            <div className="mf-logo-mark mf-logo-mark-sm">I</div>
+            <img src={eyroEyeSrc} className="mf-logo-eye mf-logo-eye-sm" alt="Eyro" />
             <span className="mf-footer-name">eyroOS</span>
           </div>
           <div className="mf-footer-links">

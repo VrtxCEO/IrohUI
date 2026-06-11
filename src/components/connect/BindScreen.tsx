@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { EyroEye } from '../eye/EyroEye'
+import eyroEyeSrc from '../../assets/eyro_eye.svg'
 import {
   parseBindPayload, isBindPayloadExpired, deriveConnectionToken,
   fetchBindingStatus, storeSession, clearAuth, clearSession,
@@ -97,7 +98,7 @@ export function BindScreen({ encoded, user, onBound, onExpired }: Props) {
       <div className="ob-wrap">
         <div className="ob-card">
           <div className="ob-logo">
-            <div className="ob-logo-mark">I</div>
+            <img src={eyroEyeSrc} className="ob-logo-eye" alt="" />
             <div className="ob-logo-name">eyro<span>OS</span></div>
           </div>
 
