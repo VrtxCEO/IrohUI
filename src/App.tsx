@@ -4,6 +4,7 @@ import { LaunchScreen } from './components/eye/LaunchScreen'
 import { LoginScreen } from './components/login/LoginScreen'
 import { BindScreen } from './components/connect/BindScreen'
 import { ConnectScreen } from './components/connect/ConnectScreen'
+import { ManifestoPage } from './components/manifesto/ManifestoPage'
 import { getToken, getStoredUser, getSession } from './lib/auth'
 import type { AuthUser, OsSession } from './lib/auth'
 import './index.css'
@@ -14,7 +15,7 @@ function getBindParam(): string | null {
   return new URLSearchParams(window.location.search).get('p')
 }
 
-export default function App() {
+function AuthApp() {
   const [phase, setPhase]     = useState<Phase>('launch')
   const [user, setUser]       = useState<AuthUser | null>(getStoredUser)
   const [session, setSession] = useState<OsSession | null>(getSession)
@@ -72,4 +73,9 @@ export default function App() {
   }
 
   return <LoginScreen onLogin={handleLogin} />
+}
+
+export default function App() {
+  if (window.location.pathname === '/manifesto') return <ManifestoPage />
+  return <AuthApp />
 }

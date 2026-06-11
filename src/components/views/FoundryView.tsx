@@ -3,7 +3,7 @@ import { usePoll, apiFetch } from '../../lib/useEyroWS'
 interface FoundryEntry {
   id: string
   title: string
-  domain: string
+  keywords: string[]
   confidence: number
   fire_count: number
 }
@@ -42,9 +42,19 @@ export function FoundryView() {
               {entries.map(e => (
                 <div key={e.id} style={{ background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)' }}>{e.title}</div>
-                  <div style={{ fontSize: 10.5, color: 'var(--text-2)', lineHeight: 1.5, fontFamily: "'JetBrains Mono',monospace" }}>
+                  {e.keywords.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {e.keywords.map(k => (
+                        <span key={k} style={{
+                          fontSize: 10, padding: '2px 7px', borderRadius: 99,
+                          background: 'rgba(0,200,150,0.08)', border: '1px solid rgba(0,200,150,0.18)',
+                          color: 'var(--accent)', fontFamily: "'JetBrains Mono',monospace",
+                        }}>{k}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 10.5, color: 'var(--text-3)', lineHeight: 1.5, fontFamily: "'JetBrains Mono',monospace", marginTop: 4 }}>
                     {[
-                      e.domain && `domain: ${e.domain}`,
                       e.confidence && `confidence: ${Math.round(e.confidence * 100)}%`,
                       e.fire_count && `applied ${e.fire_count}×`,
                     ].filter(Boolean).join(' · ')}

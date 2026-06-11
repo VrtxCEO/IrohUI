@@ -8,6 +8,7 @@ interface LedgerTask {
   total_steps: number
   step_results: { tool_id?: string; action?: string; success?: boolean }[]
   created_at: string
+  updated_at?: string | null
   error?: string | null
 }
 
@@ -87,7 +88,11 @@ function TaskCard({ task }: { task: LedgerTask }) {
         ))}
       </div>
       <div className="task-meta">
-        <span>Started {timeLabel(task.created_at)}</span>
+        <span>
+          {task.updated_at && task.updated_at !== task.created_at && (task.status === 'completed' || task.status === 'failed' || task.status === 'cancelled')
+            ? `Updated ${timeLabel(task.updated_at)}`
+            : `Started ${timeLabel(task.created_at)}`}
+        </span>
         <span>{task.task_id.slice(0, 14)}</span>
         {task.error && <span style={{ color: 'var(--red)' }}>{task.error.slice(0, 40)}</span>}
       </div>
