@@ -10,6 +10,7 @@ import { FoundryView } from '../views/FoundryView'
 import { VaultView } from '../views/VaultView'
 import { MintView } from '../views/MintView'
 import { AuthOverlay } from './AuthOverlay'
+import { NotificationBell } from './NotificationBell'
 import { useEyroWS, apiFetch } from '../../lib/useEyroWS'
 import type { AuthChallenge } from '../../lib/useEyroWS'
 import { SceneCanvas } from '../scene/SceneCanvas'
@@ -221,7 +222,11 @@ export function ShellScreen({ user, session }: Props) {
           <span>{connected ? (isBusy ? 'Thinking…' : 'Connected') : (reconnecting ? 'Reconnecting…' : 'Disconnected')}</span>
         </div>
 
-        <div className="avatar-wrap" ref={avatarRef} style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <NotificationBell />
+        </div>
+
+        <div className="avatar-wrap" ref={avatarRef}>
           <div className="avatar" onClick={() => setAvatarOpen(o => !o)}>{userInitial}</div>
           {avatarOpen && (
             <div className="avatar-menu">
