@@ -93,7 +93,7 @@ export function ManifestoPage() {
 
         {/* ── HERO ── */}
         <section className="mf-hero">
-          <div className="mf-eyebrow">Technical Paper · June 2026</div>
+          <div className="mf-eyebrow">Technical Paper · August 2026</div>
           <h1 className="mf-hero-title">
             Death to<br />
             <span className="mf-hero-title-accent">Agent Wrappers</span>
@@ -103,7 +103,7 @@ export function ManifestoPage() {
             Incapable of Supporting Real Agentic Growth
           </p>
           <p className="mf-paper-author">
-            Omni-Ouro — Independent Designer and Developer, Eyro&nbsp;
+            Omni-Ouro, Independent Designer and Developer, Eyro&nbsp;
             <a href="https://eyro.io/" className="mf-author-link">eyro.io</a>
           </p>
           <div className="mf-hero-cta">
@@ -119,20 +119,17 @@ export function ManifestoPage() {
           <div className="mf-abstract">
             <div className="mf-abstract-label">Abstract</div>
             <p>
-              The dominant paradigm for deploying AI agents today is the prompt-style wrapper: a
-              system that directs agent behavior through runtime text injection, chained model calls,
-              and retrieved context rather than through persistent, governed, structured state. This
-              paper argues that this pattern is not merely suboptimal — it is architecturally
-              incompatible with the requirements of genuine agentic growth. The argument is made in
-              three parts: a theoretical account of what agentic growth actually requires; a
-              technical dissection of why current leading frameworks — including LangChain/LangGraph,
-              CrewAI, and OpenClaw — fail to meet those requirements despite their apparent
-              sophistication; and a detailed examination of the design decisions behind Eyro, an AI
-              agent operating system built on a deterministic, substrate-first architecture, as a
-              case study in what the alternative looks like in practice. My claim is not that Eyro
-              is a finished answer. The claim is that the direction is correct, that the current
-              standard is insufficient, and that the field must grapple with this honestly if real
-              progress toward autonomous AI systems is going to happen.
+              The dominant way AI agents get built today is the prompt-style wrapper: a system
+              that directs behavior through runtime text injection, chained model calls, and
+              retrieved context rather than through persistent, governed, structured state. This
+              paper argues that pattern is not just suboptimal, it is architecturally incompatible
+              with genuine agentic growth. I lay out what agentic growth actually requires, examine
+              why three widely used frameworks (LangChain/LangGraph, CrewAI, and OpenClaw) fall
+              short of those requirements despite real sophistication, and use Eyro, an agent
+              operating system built on a deterministic, substrate-first architecture, as a case
+              study in what the alternative looks like. My claim isn't that Eyro is finished. It's
+              that the direction is correct, the current standard is insufficient, and the field
+              needs to grapple with that honestly.
             </p>
           </div>
 
@@ -141,38 +138,34 @@ export function ManifestoPage() {
             <div className="mf-section-label">1. Introduction</div>
             <div className="mf-prose">
               <p>
-                When the major LLM providers opened their APIs, the development community did what it
-                always does: it built abstractions. Frameworks appeared almost immediately — LangChain
-                in 2022, CrewAI shortly after, and a long succession of others — each promising to
-                take the raw capability of a language model and organize it into something that
-                behaved like an agent. You could give it tools. You could give it a persona. You
-                could chain its outputs back into its inputs and get something that appeared to reason
-                across multiple steps.
+                When OpenClaw launched, I was one of the people who got pulled in fast. An agent
+                that could handle things while I was away, replying to messages, running errands,
+                effectively letting me be in two places at once, felt like exactly the kind of
+                thing this industry had been promising for years without delivering. I spent about
+                two days deep in it: reading the docs, watching demos, testing it against real
+                tasks. By the end I knew it wasn't going to hold up. It's a genuinely clever idea
+                sitting on a foundation that can't support it, and every improvement the team has
+                shipped since (credit to them, there have been real ones) has patched a symptom
+                while leaving the underlying assumption untouched: that memory, identity, and
+                governance can all live as text inside whatever a model happens to be reasoning
+                over at a given moment.
               </p>
               <p>
-                This wave of tooling served a real purpose. It democratized access to agent-like
-                behavior, reduced the engineering barrier to experimentation, and produced enormous
-                amounts of practical learning about what users and businesses actually want from AI
-                systems. That contribution is real and should not be dismissed.
+                That assumption isn't unique to OpenClaw. It's the load-bearing idea behind nearly
+                every popular agent framework in production today. LangChain, CrewAI, and the rest
+                democratized access to agent-like behavior and taught the field a lot about what
+                people actually want from these systems. That contribution is real. But the
+                scaffolding got confused with the foundation, and the field is now building
+                consequential systems on architectures whose most important properties are
+                determined not by design but by whatever text happens to be sitting in a context
+                window at a given moment.
               </p>
               <p>
-                But the scaffolding got confused with the foundation. What began as experimental
-                wiring became the default architecture for production deployments. And the field is
-                now in a position where the most popular, most widely-cited frameworks for building
-                AI agents are, at their structural core, sophisticated prompt pipelines — systems
-                whose most important properties are determined not by architecture but by what text
-                happens to be in a context window at a given moment.
-              </p>
-              <p>
-                This matters because agentic behavior that actually compounds — agents that get
-                better, that maintain consistent identity, that can be trusted with autonomous action
-                in consequential environments — requires structural properties that prompt pipelines
-                cannot provide. Not approximately. Not without caveats significant enough that the
-                gap becomes immaterial. Structurally cannot provide.
-              </p>
-              <p>
-                This paper makes that argument explicitly and builds a case for what the alternative
-                looks like.
+                Agentic behavior that actually compounds, agents that improve over time, hold a
+                consistent identity, and can be trusted with autonomous action, requires structural
+                properties that prompt pipelines cannot provide. Not approximately. Structurally
+                cannot provide. This paper makes that case and shows what the alternative looks
+                like.
               </p>
             </div>
           </section>
@@ -182,16 +175,13 @@ export function ManifestoPage() {
             <div className="mf-section-label">2. Defining Terms: What Is a Prompt-Style Wrapper?</div>
             <div className="mf-prose">
               <p>
-                A prompt-style wrapper, as used here, refers to any system whose primary mechanism
-                for directing agent behavior is runtime injection of text into a language model's
-                context window. The defining characteristic is not simplicity — some of these systems
-                are architecturally complex. The defining characteristic is that state, identity,
-                goals, memory, and governance exist as text in a prompt rather than as structured,
-                persistent, addressable data with enforcement semantics outside the model.
+                A prompt-style wrapper is any system whose primary mechanism for directing agent
+                behavior is runtime injection of text into a model's context window. The defining
+                trait isn't simplicity (some of these systems are architecturally complex), it's
+                that state, identity, goals, memory, and governance exist as text in a prompt
+                rather than as structured, persistent, addressable data enforced outside the model.
               </p>
-              <p>
-                This definition covers more of the landscape than it might initially seem:
-              </p>
+              <p>That covers more of the landscape than it might seem:</p>
             </div>
             <pre className="mf-code-block">{`Prompt-Style Wrapper Patterns:
 
@@ -202,13 +192,9 @@ export function ManifestoPage() {
   [5] "Governance"                    → instructions the model is expected to follow`}</pre>
             <div className="mf-prose">
               <p>
-                These are not edge-case descriptions. They are accurate descriptions of
-                LangChain/LangGraph's architecture, CrewAI's architecture, and the architecture of
-                OpenClaw — currently among the most popular agent frameworks in production use.
-              </p>
-              <p>
-                Understanding why sophistication within this paradigm still leaves the fundamental
-                problems unsolved is the core of the argument.
+                These aren't edge cases. They're accurate descriptions of LangChain/LangGraph,
+                CrewAI, and OpenClaw, three of the most widely used agent frameworks in production
+                today.
               </p>
             </div>
           </section>
@@ -218,22 +204,19 @@ export function ManifestoPage() {
             <div className="mf-section-label">3. What Agentic Growth Actually Requires</div>
             <div className="mf-prose">
               <p>
-                Before cataloguing failures, it is worth being precise about what we are measuring
-                against. "Agentic growth" as used here does not mean task completion or even
-                multi-step reasoning. It means the capacity for a system to improve its performance
-                over time through structured experience, maintain consistent identity across
-                operational contexts, and take autonomous action in ways that can be trusted and
-                verified.
-              </p>
-              <p>
-                That definition implies five structural requirements:
+                Before cataloguing failures, it's worth being precise about what we're measuring
+                against. Agentic growth here doesn't mean task completion or multi-step reasoning.
+                It means the capacity to improve performance over time through structured
+                experience, hold a consistent identity across contexts, and take autonomous action
+                in ways that can be trusted and verified. That implies five structural
+                requirements:
               </p>
             </div>
             <pre className="mf-code-block">{`Five Structural Requirements for Genuine Agentic Growth:
 
   1. PERSISTENT STRUCTURED STATE
      Agent knowledge survives sessions, is addressable by subsystems,
-     and updates through governed processes — not through whatever
+     and updates through governed processes, not through whatever
      text persists in a conversation thread.
 
   2. ARCHITECTURAL SEPARATION OF EXECUTION AND LEARNING
@@ -250,7 +233,7 @@ export function ManifestoPage() {
   4. STRUCTURAL BEHAVIORAL GOVERNANCE
      Behavioral constraints enforced through text instructions are
      probabilistic. Compliance is a function of model behavior under
-     context — not a structural guarantee. For consequential
+     context, not a structural guarantee. For consequential
      deployments, this is disqualifying.
 
   5. PROACTIVE AND REACTIVE OPERATIONAL MODES
@@ -259,10 +242,7 @@ export function ManifestoPage() {
      to initiate behavior from internal state, independent of
      external prompting.`}</pre>
             <div className="mf-prose">
-              <p>
-                Current frameworks address some of these requirements partially. None address them
-                structurally.
-              </p>
+              <p>Current frameworks address some of this partially. None address it structurally.</p>
             </div>
           </section>
 
@@ -273,175 +253,102 @@ export function ManifestoPage() {
             <h3 className="mf-subsection-title">4.1 LangChain / LangGraph: Sophisticated Scaffolding, Unchanged Substrate</h3>
             <div className="mf-prose">
               <p>
-                LangChain is the most widely used agent framework in the world. Its evolution into
-                LangGraph represented a genuine architectural improvement — the introduction of a
-                stateful graph structure with checkpointed state and explicit memory management was
-                a meaningful step forward from the original chain-based design.
+                LangChain is the most widely used agent framework in the world, and LangGraph's
+                stateful graph structure with checkpointed state was a real improvement over the
+                original chain-based design. But long conversations still overflow context windows
+                or degrade model performance well before they run out of room,<Ref n={1} /> and
+                LangChain's older in-process memory classes, wiped by a simple restart, were
+                deprecated in favor of LangGraph checkpointers and LangMem.<Ref n={2} /> LangMem
+                itself doesn't enforce any particular storage backend; it's a thin layer over
+                whatever vector database or key-value store gets configured as a tool.<Ref n={3} />
               </p>
               <p>
-                LangGraph manages short-term memory as part of the agent's state, persisted via
-                thread-scoped checkpoints. Long conversations pose a well-documented challenge: a
-                full history may not fit inside an LLM's context window, resulting in irrecoverable
-                errors, and even when context length is sufficient, most LLMs still perform poorly
-                over very long contexts.<Ref n={1} /> LangChain's older memory classes stored state
-                only in process memory — restart the Python process and all conversation history is
-                lost. As of LangChain v0.3.1, these classes are deprecated, replaced by LangMem and
-                LangGraph checkpointers.<Ref n={2} /> LangMem, LangChain's dedicated long-term
-                memory layer, does not enforce any particular storage type and relies on a vector
-                database or key-value store backend configured as tools passed to the agent — not as
-                structural substrate.<Ref n={3} /> Third-party benchmarks have measured LangMem's
-                p95 retrieval latency at nearly 60 seconds under load.
-              </p>
-              <p>
-                But the performance numbers are a symptom, not the disease. The deeper architectural
-                issue is this: even with persistent checkpointers, the LLM in a LangGraph pipeline
-                is forced to act as the central processing unit and working memory simultaneously.
-                Every reasoning step requires the model to reconstruct context from whatever has been
-                serialized into its input. State is not an independent artifact the agent reads from
-                — it is a property of the pipeline that must be re-injected into the model on every
-                call.
-              </p>
-              <p>
-                This means the agent has no cognitive home that survives model version changes,
-                framework upgrades, or architectural refactoring. In LangGraph, if the checkpointer
-                fails, state is lost. If the context window overflows, older state is truncated
-                without signal. If the developer refactors the pipeline, state schema compatibility
-                must be manually maintained. The agent and its state are inseparable from the
-                pipeline that produces them — which means the agent has no independent existence
-                at all.
+                The deeper issue isn't performance, it's that the LLM in a LangGraph pipeline has
+                to act as CPU and working memory at once. State isn't an independent artifact the
+                agent reads from, it's a property of the pipeline that gets re-serialized into the
+                model on every call. If the checkpointer fails, state is lost. If the context
+                window overflows, older state is truncated without signal. The agent has no
+                cognitive home that survives model changes or pipeline refactors, because the agent
+                and its state were never separable to begin with.
               </p>
 
               <h3 className="mf-subsection-title">4.2 CrewAI: Role Specialization Without Structural State</h3>
               <p>
-                CrewAI represents the most thoughtful current attempt at multi-agent architecture
-                within the wrapper paradigm. Its role-based design assigns distinct responsibilities
-                to agents with support for hierarchical modes — a manager agent supervising and
-                delegating to subordinates — and distributed modes with bidirectional communication
-                and shared memory.<Ref n={4} /> The introduction of Flows added deterministic
-                orchestration on top of the probabilistic agent layer, and CrewAI Enterprise added
-                hallucination guardrails capable of reacting to certain conditions at runtime.<Ref n={5} />
+                CrewAI is the most thoughtful current attempt at multi-agent architecture inside
+                the wrapper paradigm. Its role-based design supports hierarchical modes (a manager
+                agent delegating to subordinates) and distributed modes with shared
+                memory,<Ref n={4} /> and its Flows layer adds deterministic orchestration plus
+                hallucination guardrails on top of the probabilistic agent layer.<Ref n={5} />
+                That's genuinely more sophisticated than a single-agent pipeline. It doesn't escape
+                the paradigm, though.
               </p>
               <p>
-                This is genuinely more sophisticated than a single-agent prompt pipeline. But it does
-                not escape the paradigm.
-              </p>
-              <p>
-                Agents in CrewAI are defined by specialized roles, goals, and backstories encoded in
-                YAML configuration files — described in CrewAI's own documentation as "specialized
-                AI personas" whose properties "shape how they approach tasks."<Ref n={6} /> Role
-                identity in CrewAI is a configuration file that gets injected into a system prompt.
-                It is not structurally enforced at runtime. An agent's role can be contradicted by
-                sufficiently strong input context, overridden by a manager agent's delegated
-                instructions, or diluted across a long task execution.
-              </p>
-              <p>
-                Flows orchestrate task order, conditional branching, retries, and feedback loops,
-                with each agent receiving context from previous steps and the orchestrator
-                maintaining core control.<Ref n={7} /> But "each agent gets context from previous
-                steps" is the wrapper pattern under a different name. State is passed as context,
-                not held as substrate. When the task ends, that state is gone unless explicitly
-                serialized by the developer. The manager agent that supervised the run has no
-                persistent representation of what worked and what did not that carries into the
-                next run.
-              </p>
-              <p>
-                CrewAI focuses on role-based multi-agent collaboration while explicitly offering
-                less flexibility for complex agentic architecture.<Ref n={8} /> That trade-off is
-                honest. But it understates the structural limitation: specialization without
-                persistent state is parallelized forgetfulness. Each run begins from the same blank
-                substrate. The crew learns nothing.
+                Agent roles in CrewAI are YAML configuration injected into a system prompt,
+                described in CrewAI's own docs as personas that "shape how they approach
+                tasks."<Ref n={6} /> That's not a structurally enforced identity; it can be
+                contradicted by strong input context or overridden by a manager agent's
+                instructions. Flows still pass state as context between steps rather than holding
+                it as substrate,<Ref n={7} /> so when a run ends, whatever state existed disappears
+                unless a developer explicitly serializes it. Specialization without persistent
+                state is parallelized forgetfulness: every run starts from the same blank slate,
+                and the crew learns nothing between them.<Ref n={8} />
               </p>
 
               <h3 className="mf-subsection-title">4.3 OpenClaw: The Tool Array as a False Architecture</h3>
               <p>
-                OpenClaw is perhaps the most instructive case study because its appeal is viscerally
-                compelling: a local AI agent with access to a massive, extensible tool array —
-                files, shell, calendar, web, messaging — that genuinely does things rather than just
-                outputting text. Its rapid adoption (nearly 200,000 GitHub stars within months of
-                release) reflects how clearly it demonstrates what people actually want from an AI
-                agent.
+                OpenClaw is the most instructive case, because its appeal is real: a local-first
+                agent with access to a genuinely useful tool array (files, shell, calendar,
+                messaging) that does things instead of just describing them. Its architecture is
+                simple by design: the model handles decision-making, and conversation history and
+                tool execution stay local.<Ref n={9} /> Its extensibility comes from ClawHub, a
+                community skill marketplace, and installing a skill is effectively running
+                unreviewed third-party code with the agent's own permissions.<Ref n={10} /> A
+                security audit of ClawHub found that roughly 12% of available skills were malicious
+                (data exfiltration, prompt injection payloads, and worse), with 8 vulnerabilities
+                rated critical.<Ref n={11} />
               </p>
               <p>
-                OpenClaw's architectural logic is not complicated: the LLM handles intelligent
-                decision-making, and conversation history along with tool execution are kept locally
-                by the user.<Ref n={9} /> Its extensibility comes from ClawHub, a community registry
-                of skills that extend the agent's capabilities. Installing a skill is effectively
-                running unreviewed third-party code with the same permissions as the agent
-                itself.<Ref n={10} />
+                The same trust model produced a real incident in February 2026, though not the one
+                people usually attribute to OpenClaw. Attackers used a malicious GitHub issue title
+                to trick Cline's AI-powered triage bot, which had shell access on a CI runner, into
+                leaking publishing credentials. Those credentials were used to push a trojanized
+                package to npm whose install script silently pulled down and ran OpenClaw itself,
+                reaching an estimated 4,000 developer machines.<Ref n={12} /> Cline is a different
+                tool, but it's built on the identical premise: give a model your credentials and
+                your shell, and trust the prompt to behave. Whichever tool sits on either side of
+                an incident like this, the vulnerability class is the same.
               </p>
               <p>
-                The security consequences of building governance on top of this pattern rather than
-                into the foundation should not be overlooked. In February 2026, an attacker exploited
-                the way an OpenClaw-powered coding agent processed instructions and used prompt
-                injection to install software on users' systems — not through complex malware, but
-                through text that the model treated as valid instructions, ultimately affecting
-                approximately 4,000 developers.<Ref n={11} /> A security audit of ClawHub found
-                that roughly 12% of available skills were malicious, containing data exfiltration
-                code, prompt injection payloads, and other threats, with 8 vulnerabilities rated
-                critical.<Ref n={12} />
-              </p>
-              <p>
-                The source of these vulnerabilities is not poor implementation. It is the
-                architecture — and it represents a violation of two foundational security principles.
-              </p>
-              <p>
-                First, the Principle of Least Privilege. OpenClaw's agent operates with shell access,
-                file system permissions, and network capability simultaneously, governed only by
-                LLM-level behavioral instructions. There is no structural mechanism to scope
-                permissions to the task at hand. Every action the agent could ever take is available
-                on every call, because the governance layer is inside the reasoning engine, not
-                above it.
-              </p>
-              <p>
-                Second, the absence of data/instruction separation. This vulnerability class is not
-                new. It is structurally reminiscent of early Von Neumann architecture exploits —
-                buffer overflows, code injection — that arose from storing executable instructions
-                and raw data in the same address space with no hardware-enforced boundary between
-                them. The fix for those vulnerabilities was not smarter parsing. It was architectural
-                separation: execute bits, memory protection, privilege rings. Prompt wrappers
-                recreate the pre-separation architecture in a new domain. Large language models treat
-                everything in context as equivalent tokens — system prompts, user input, retrieved
-                documents, injected tool results all become the same stream.<Ref n={13} /> The
-                "security firewall" is inside the probabilistic parsing engine itself. That is not
-                a security architecture. It is mathematically stupid.
-              </p>
-              <p>
-                No LLM vendor has solved prompt injection at the model level.<Ref n={14} /> The
-                solution is not a better model. It is enforcing the trust boundary at the
-                architecture level, before the model ever sees the input or before the model can
-                act on the input.
+                That's a violation of two basic security principles. First, least privilege:
+                OpenClaw's agent holds shell, filesystem, and network access simultaneously, scoped
+                only by instructions the model is asked to follow, because the governance layer
+                sits inside the reasoning engine instead of above it. Second, the absence of any
+                real boundary between instructions and data. Models treat everything in context
+                (system prompts, user input, retrieved documents, tool output) as the same stream
+                of tokens.<Ref n={13} /> No LLM vendor has solved prompt injection at the model
+                level,<Ref n={14} /> and it isn't going to be solved by a better model. It has to
+                be solved by enforcing the trust boundary at the architecture level, before the
+                model ever acts on the input.
               </p>
             </div>
           </section>
 
           {/* Section 5 */}
           <section className="mf-section">
-            <div className="mf-section-label">5. Eyro: A Case Study in the Substrate-First Alternative</div>
+            <div className="mf-section-label">5. Eyro: What the Alternative Looks Like</div>
             <div className="mf-prose">
               <p>
-                Eyro is an AI agent operating system in active development. Its architecture was not
-                designed in reaction to the failure modes above — it was designed from the beginning
-                with different assumptions about where agent properties should live. The result
-                illustrates concretely what the alternative looks like and why the architectural
-                decisions matter.
-              </p>
-
-              <h3 className="mf-subsection-title">5.1 The Persistent Cognitive Substrate: The LLM as Stateless Execution Unit</h3>
-              <p>
-                The central architectural decision in Eyro is the Persistent Cognitive Substrate
-                (PCS) — a durable, structured state layer that serves as the canonical source of
-                truth for everything the agent system knows, has recorded, and has been authorized
-                to act on.
+                Eyro is an AI agent operating system I've been building from a different set of
+                assumptions: that the properties above have to live outside the model, not inside
+                a prompt.
               </p>
               <p>
-                The PCS is not a context window. It is not a vector store. It is not a
-                session-scoped checkpoint. It is the agent's persistent home — a governed data
-                structure that exists outside any individual model call and survives sessions, model
-                version changes, and operational contexts.
-              </p>
-              <p>
-                This resolves context amnesia structurally. But the more important consequence is
-                what it does to the LLM's role in the system:
+                The central decision is what I call the Persistent Cognitive Substrate, a durable,
+                structured state layer that's the canonical source of truth for what the system
+                knows and is authorized to do. It isn't a context window, a vector store, or a
+                session checkpoint. It's the agent's actual home, and it survives sessions, model
+                changes, and everything else that resets a wrapper's memory. That reframes what the
+                LLM is for:
               </p>
             </div>
             <pre className="mf-code-block">{`Wrapper Architecture:
@@ -450,187 +357,40 @@ export function ManifestoPage() {
 
 Eyro Architecture:
   LLM = Stateless Execution Unit with strictly defined I/O boundaries
-  PCS = Persistent state, knowledge, and agent identity
+  Substrate = Persistent state, knowledge, and agent identity
   Governance Layer = Structural enforcement outside the model
         [Responsibilities separated by architectural boundary]`}</pre>
             <div className="mf-prose">
               <p>
-                In Eyro, the LLM receives a bounded input, performs a reasoning step, and returns a
-                structured output. It does not hold state between calls. It does not manage its own
-                memory. It does not enforce its own behavioral constraints. These responsibilities
-                belong to components with the structural properties required to fulfill them:
-                persistence, addressability, and enforcement semantics that do not depend on model
-                behavior.
+                In Eyro, the model receives a bounded input, reasons over it, and returns a
+                structured output. It doesn't hold state between calls, manage its own memory, or
+                enforce its own behavior. Those jobs belong to components built for persistence,
+                addressability, and enforcement that doesn't depend on the model behaving itself.
+                An agent that comes back after a week doesn't reconstruct itself from injected
+                history, it reads from a substrate that was never lost.
               </p>
               <p>
-                This makes a clear distinction between "state holding itself" and "state being passed
-                as context". An agent that returns after a week does not reconstruct itself from
-                injected history — it reads from a substrate that was never lost. State is an
-                independent artifact with its own integrity guarantees and versioning, not a side
-                effect of the pipeline that produces it.
-              </p>
-
-              <h3 className="mf-subsection-title">5.2 Foundry Query: Deterministic Capability Lookup Over Context Bloat</h3>
-              <p>
-                RAG is a genuine advance. The architectural intuition behind it — that agents should
-                not need to hold everything in working memory — is correct. The implementation,
-                however, still produces a familiar failure mode: over-injection of retrieved content
-                fills context with noise, or under-injection leaves the agent without what it needs.
-                In both cases, the agent is at the mercy of a retrieval system that operates on
-                semantic similarity rather than structured access.
+                Two more pieces follow from the same premise. Knowledge lookup works like a
+                deterministic search engine rather than a retrieval system: instead of stuffing raw
+                chunks into context on semantic similarity, the agent queries a typed registry and
+                gets back an exact pointer or capability definition, nothing more than it needs for
+                the task in front of it. And evaluation happens outside the agent entirely: a
+                separate background process reviews outputs against expected performance, produces
+                structured learning artifacts, and surfaces them for review before anything gets
+                promoted into the system's knowledge. The agent doesn't grade its own homework, for
+                the same reason self-review is weaker than independent review anywhere else: a
+                system can't reliably audit itself from inside the context that produced the thing
+                being audited.
               </p>
               <p>
-                Eyro's Foundry Query system was designed around a different analogy: a search engine
-                rather than a document retriever.
-              </p>
-            </div>
-            <pre className="mf-code-block">{`Traditional RAG:
-  Query → Semantic vector search → Raw chunk retrieval →
-  Inject chunks into context → Model reasons over noisy context
-
-Foundry Query:
-  Query → Deterministic schema registry lookup →
-  Typed capability pointer or structured data reference returned →
-  Agent invokes specific resource on demand`}</pre>
-            <div className="mf-prose">
-              <p>
-                Foundry Query uses a deterministic, strictly typed schema registry for capability
-                and knowledge lookup. When an agent needs to perform an action, it queries the
-                registry and receives an exact API schema or targeted data pointer — not raw vector
-                chunks. The agent knows what tools are available and precisely how to invoke them,
-                without having to ingest the entire knowledge base to find out.
-              </p>
-              <p>
-                The practical consequence is constraint on context injection by design. An agent
-                asked to schedule a task does not need the entire system state in its context window.
-                It needs to know that a scheduling interface exists, what its parameters are, and
-                how to call it. Foundry Query provides exactly that and nothing more. The agent
-                knows where to look, and will reason its way through when and how far to look.
-                Imagine every Google search you ever made showing your name, your operator's name,
-                your address, your job, your car, etc. when all you asked was for the closest
-                wing spot.
-              </p>
-
-              <h3 className="mf-subsection-title">5.3 The Tutor: External Evaluation, Not Self-Reflection</h3>
-              <p>
-                Reflection loops in current frameworks share a structural property: they ask the
-                same reasoning system that produced an output to evaluate that output. The model
-                critiques itself from within the context that shaped the original response — bounded
-                by the same priors, the same blind spots, and the inherent circularity of the
-                process. This is structurally inconsistent in the same way a narcissist cannot be
-                trusted to diagnose their own narcissism. The diagnostic criteria must be interpreted
-                by the very ego being evaluated.
-              </p>
-              <p>
-                Eyro's Tutor is architecturally distinct. It operates entirely outside the agent's
-                operational context — a background evaluation process that reviews agent outputs
-                against expected performance parameters, generates structured learning artifacts,
-                and surfaces them for review before any updates are promoted into the system's
-                knowledge base.
-              </p>
-              <p>
-                The agent does not teach itself. The agent does not participate in its own
-                evaluation. The Tutor is not a tool the agent can invoke or a persona that can be
-                overridden by sufficiently strong input context. It is a separate system with a
-                separate operational existence, and the path from Tutor evaluation to Foundry update
-                is a governed process — what the system learns is an explicit decision, not a side
-                effect of operation.
-              </p>
-              <p>
-                This distinction matters for the same reason external code review matters more than
-                self-review: evaluator independence from the evaluated process is the mechanism that
-                makes feedback trustworthy. A reflection loop that shares context with the agent it
-                reflects on is not independent. It is the same lens examining itself.
-              </p>
-
-              <h3 className="mf-subsection-title">5.4 Freedom Levels, Risk Monitoring, and Autonomous Mode: Governance as Structure</h3>
-              <p>
-                Every production agent framework has some form of behavioral constraints. CrewAI has
-                hallucination guardrails. OpenClaw has system prompt instructions about what the
-                agent should and should not do. LangGraph supports conditional routing that can block
-                certain execution paths. The commonality is that these constraints are advisory —
-                only implemented as instructions the model is expected to follow, with no structural
-                mechanism preventing non-compliance.
-              </p>
-              <p>
-                Eyro implements behavioral governance through freedom levels — a four-tier constraint
-                architecture (levels 0–3) where each level determines what actions an agent may take
-                without explicit authorization, escalation, or human review. The critical difference
-                from advisory constraints is structural enforcement: when operating at freedom level
-                0 no action can be taken regardless of what the model's output says. The governance
-                layer evaluates the requested action before execution. It does not ask the model to
-                comply — it controls the execution surface the model has access to.
-              </p>
-              <p>
-                This is paired with a risk monitoring layer that evaluates behavioral drift against
-                expected parameters at the system level — not by asking the agent to govern itself
-                better, but by observing operational output against defined boundaries. Escalation
-                or halting when parameters are exceeded is handled structurally. Every tool is given
-                a risk level and the risks are mapped to freedom levels that allow them. An agent
-                will not be able to execute a tool that requires freedom level 3 if they are in
-                freedom level 1.
-              </p>
-              <p>
-                Autonomous mode represents the final gate of this progression: at every freedom
-                level, the agent can initiate and execute sequences of actions that fit the allowed
-                risk, made trustworthy precisely because the governance architecture underneath it
-                provides verifiable behavioral bounds.
-              </p>
-              <p>
-                Rather than a linear extension of the agent's freedom levels, Autonomous Mode
-                operates as an orthogonal, fail-safe layer. It functions essentially as a protective
-                envelope around an existing protective layer. For example, even when an agent is
-                granted max-tier execution rights (Freedom Level 3), turning Autonomous Mode off
-                forces a hard state interception: the underlying governance engine will actively
-                block high-risk actions, requiring manual validation and authorization before the
-                state transition can commit. Which means no random purchases or crypto trades at
-                3am unless you leave the gate open.
-              </p>
-              <p>
-                This is what enforcement above the model level actually looks like. The trust
-                boundary is not inside the probabilistic parsing engine. It is in the layer that
-                decides what the engine is ever allowed to touch.
-              </p>
-
-              <h3 className="mf-subsection-title">5.5 Breath and the PCS Heartbeat: Proactive and Reactive as First-Class Modes</h3>
-              <p>
-                Most agent systems are fundamentally reactive. They wait for input, process it, and
-                return output. The appearance of proactivity — scheduled tasks, triggered automations
-                — is generally implemented externally: cron jobs or webhook handlers that inject new
-                inputs to restart the reactive cycle. The agent itself has no native concept of
-                autonomous initiation.
-              </p>
-              <p>
-                Eyro distinguishes between two operational modes at the architectural level. For
-                engineers, the analogy:
-              </p>
-            </div>
-            <pre className="mf-code-block">{`PCS Heartbeat  →  Interrupt Handler
-  Responds to incoming signals, user input, and state changes
-  with governed, contextually appropriate action.
-  Optimized for low-latency, synchronous/asynchronous response.
-  Analogous to hardware or network interrupt handling in a kernel —
-  the system reacts to an external event with a defined handler.
-
-Breath  →  Kernel Daemon / Cron Scheduler
-  Initiates agent behavior based on internal state delta evaluations,
-  scheduled triggers, or environmental conditions —
-  independent of external input.
-  Analogous to a native kernel daemon executing lifecycle loops:
-  it does not wait to be called; it evaluates internal state
-  and acts when conditions are met.`}</pre>
-            <div className="mf-prose">
-              <p>
-                The distinction is not merely conceptual. The two modes have different operational
-                profiles, different governance requirements, and different relationships to the PCS
-                state that informs them. The heartbeat is the agent responding. Breath is the agent
-                acting.
-              </p>
-              <p>
-                An agent that can only respond is a sophisticated tool. An agent that can initiate
-                from internal state is something closer to an autonomous actor. Eyro treats both
-                modes as first-class architectural concerns, not engineering afterthoughts layered
-                on top of a reactive core.
+                The last piece is governance and initiative. Behavioral limits are enforced
+                structurally through tiered permission levels rather than through instructions the
+                model is expected to follow, so an action that requires a permission level the
+                agent doesn't have simply cannot execute, regardless of what the model outputs. And
+                the system distinguishes between responding to input and acting on its own: most
+                agent tooling only ever reacts, with anything that looks proactive bolted on
+                externally through cron jobs or webhooks. Eyro treats initiating action from
+                internal state as a first-class mode, not an afterthought.
               </p>
             </div>
           </section>
@@ -640,51 +400,40 @@ Breath  →  Kernel Daemon / Cron Scheduler
             <div className="mf-section-label">6. The Standard Must Change</div>
             <div className="mf-prose">
               <p>
-                The natural objection is widespread: wrapper-based systems work for many
-                applications, they are easier and faster to build, and they have demonstrated clear
-                product-market fit. Why demand a higher standard?
+                The natural objection: wrapper-based systems work for plenty of applications,
+                they're faster to build, and they have real product-market fit. Why demand more?
               </p>
               <p>
-                The answer is that "works for many applications" and "capable of serving as the
-                substrate for genuine autonomous agency" are different claims. Wrapper-based systems
-                are somewhat acceptable for bounded, well-supervised, largely stateless tasks. They
-                are not appropriate as the foundation for agents operating with meaningful autonomy
-                in consequential environments — and the field's current trajectory is toward exactly
-                those deployments. Enterprise AI agent adoption is projected to grow from roughly
-                11% to 40% through late 2026.<Ref n={15} /> The architectural debt being accumulated
-                now will be paid at scale.
+                Because "works for many applications" and "can serve as the substrate for genuine
+                autonomous agency" are different claims. Wrapper-based systems are fine for
+                bounded, supervised, largely stateless tasks. They're not a sound foundation for
+                agents operating with real autonomy in consequential environments, and that's
+                exactly where the field is heading: Gartner projects enterprise AI agent adoption
+                climbing from under 5% to roughly 40% by the end of 2026.<Ref n={15} /> The
+                architectural debt being taken on now gets paid at scale.
               </p>
               <p>
-                The security incidents already on record are instructive. The Clinejection attack —
-                prompt injection causing real-world supply chain compromise affecting thousands of
-                developers — was not a failure of model intelligence or prompt engineering skill. It
-                was a predictable consequence of building an autonomous system on a contextual
-                foundation where the trust boundary between instructions and data is enforced
-                probabilistically by the language model itself. That is an architectural problem.
-                Architectural problems do not yield to prompt improvements or more careful guardrail
-                wording.
+                The Cline supply-chain compromise described above is instructive here. It wasn't a
+                failure of model intelligence or prompt engineering skill. It was the predictable
+                result of building an autonomous system on a foundation where the boundary between
+                instructions and data is enforced probabilistically, by the model itself. That's an
+                architecture problem, and architecture problems don't yield to better prompts or
+                more careful guardrail wording.
               </p>
               <p>
-                There is also an honesty problem in how current frameworks are described. A role
-                defined in YAML and injected as a system prompt is not a structurally enforced
-                identity. A reflection loop within the same context that produced the original output
-                is not independent evaluation. A guardrail expressed as a prompt instruction is not
-                a behavioral guarantee. Calling these things by names that imply structural
-                properties they do not have sets expectations the systems cannot meet and obscures
-                the design work that actually needs to happen.
+                There's also an honesty problem in how these systems get described. A role defined
+                in YAML and injected as a system prompt is not a structurally enforced identity. A
+                reflection loop running in the same context that produced the original output is
+                not independent evaluation. A guardrail expressed as a prompt instruction is not a
+                behavioral guarantee. Calling these things by names that imply properties they
+                don't have sets expectations the systems can't meet.
               </p>
               <p>
-                Eyro is one attempt to do that design work differently. It is incomplete. There are
-                open engineering questions, trade-offs not yet fully resolved, and components in
-                active development. The argument here is not that Eyro is finished — it is that the
-                architectural skeleton is correct, that the problems it addresses are real and
-                unsolved by current frameworks, and that the field needs more systems designed with
-                these requirements as starting assumptions rather than retrofit additions.
-              </p>
-              <p>
-                The gap between what the current standard produces and what genuine autonomous agency
-                requires will not close through incremental improvement of the wrapper pattern. It
-                requires building differently, from the substrate up.
+                Eyro is one attempt to do this differently, and it's incomplete: there are open
+                questions and components still in progress. The argument isn't that Eyro is
+                finished. It's that the architecture is right, the problems it addresses are real,
+                and the field needs more systems designed around these requirements from the start
+                instead of retrofitted later.
               </p>
             </div>
           </section>
@@ -694,36 +443,31 @@ Breath  →  Kernel Daemon / Cron Scheduler
             <div className="mf-section-label">7. Conclusion</div>
             <div className="mf-prose">
               <p>
-                Prompt-style agent wrappers have served the AI field well as an acceleration layer.
-                They will continue to serve well in the bounded, supervised contexts they are suited
-                for. What they cannot do — and what the field increasingly needs — is serve as the
-                foundation for agents capable of genuine autonomy, reliable identity, structural
-                learning, and verifiable governance.
+                Prompt-style agent wrappers have earned their place as an acceleration layer, and
+                they'll keep serving the bounded, supervised use cases they're suited for. What
+                they can't do, and what the field increasingly needs, is serve as the foundation
+                for agents capable of real autonomy, reliable identity, structural learning, and
+                verifiable governance.
               </p>
               <p>
-                The failure modes are not engineering challenges within the paradigm. They are
-                properties of the paradigm. Context window amnesia, identity drift under adversarial
-                conditions, self-referential evaluation loops that cannot escape their own priors,
-                governance imposed through text instructions to a model that treats all text as
-                equivalent, reactive-only operational profiles — these follow directly from the
-                architecture. They are as predictable as buffer overflows on a system with no
+                These failures aren't engineering gaps inside the paradigm. They're properties of
+                the paradigm: context amnesia, identity drift, self-referential evaluation loops
+                that can't escape their own priors, governance that's really just text a model is
+                asked to comply with, reactive-only operation. They follow directly from the
+                architecture, as predictably as a buffer overflow follows from a system with no
                 memory protection.
               </p>
               <p>
-                The alternative, illustrated through Eyro's design decisions, is a substrate-first
-                approach that treats persistent state, execution/learning separation, external
-                evaluation, structural governance, and proactive agency as first-class architectural
-                requirements. This approach is harder to build. It requires upfront investment in
-                structural decisions that wrapper frameworks defer or avoid. It does not yet have
-                the ecosystem, the tooling, or the deployment track record of the incumbent
-                frameworks.
+                The alternative, the substrate-first approach Eyro is built on, treats persistent
+                state, separated execution and learning, external evaluation, structural
+                governance, and proactive agency as first-class requirements rather than deferred
+                ones. It's harder to build, and it doesn't yet have the ecosystem or track record
+                of the incumbents. What it has is the right foundation, and the field needs to be
+                honest about whether the current standard is actually sufficient for what it's
+                trying to build.
               </p>
               <p>
-                What it has is the correct foundation. And the field needs to be honest about
-                whether the current standard is sufficient for the systems it is trying to build.
-              </p>
-              <p>
-                Further information on Eyro's architecture and development is available at{' '}
+                Further information on Eyro's development is available at{' '}
                 <a href="https://eyro.io/" className="mf-inline-link">eyro.io</a>.
               </p>
             </div>
@@ -732,10 +476,12 @@ Breath  →  Kernel Daemon / Cron Scheduler
           {/* Author note */}
           <div className="mf-author-note">
             <p>
-              Omni-Ouro own the rights and IP of Eyro, an AI agent operating system in active
-              development. This paper reflects independent research. The author acknowledges that
-              Eyro is a work in progress — the argument is not that one implementation is complete,
-              but that the direction is correct and the current standard needs to change.
+              I own the rights and IP to Eyro, an AI agent operating system still very much in
+              progress. This paper grew out of my own two-day rabbit hole with OpenClaw rather than
+              pure research; I went in excited and came out convinced the idea deserved a better
+              foundation. I'm not claiming Eyro is a finished answer to the problems described here.
+              I'm claiming the direction is correct, and that building the missing structure in
+              from the start beats bolting it on after the fact.
             </p>
           </div>
 
@@ -743,21 +489,21 @@ Breath  →  Kernel Daemon / Cron Scheduler
           <section className="mf-section mf-references">
             <div className="mf-section-label">References</div>
             <ol className="mf-footnotes">
-              <li id="fn-1">LangChain Documentation. "Memory Overview." docs.langchain.com/oss/python/concepts/memory. Accessed June 2026.{' '}<a href="#ref-1" className="mf-fn-back">↩</a></li>
+              <li id="fn-1">LangChain Documentation. "Memory Overview." docs.langchain.com/oss/python/concepts/memory. Accessed 2026.{' '}<a href="#ref-1" className="mf-fn-back">↩</a></li>
               <li id="fn-2">Atlan. "Long-Term Memory LangChain Agents: LangGraph and LangMem Guide." atlan.com. April 2026.{' '}<a href="#ref-2" className="mf-fn-back">↩</a></li>
               <li id="fn-3">DigitalOcean. "LangMem SDK for Agent Long-Term Memory." digitalocean.com. February 2026.{' '}<a href="#ref-3" className="mf-fn-back">↩</a></li>
               <li id="fn-4">EmergentMind. "CrewAI: Multi-Agent AI Systems." emergentmind.com. August 2025.{' '}<a href="#ref-4" className="mf-fn-back">↩</a></li>
               <li id="fn-5">CrewAI Blog. "How to Build Agentic Systems: The Missing Architecture for Production AI Agents." crewai.com. December 2025.{' '}<a href="#ref-5" className="mf-fn-back">↩</a></li>
-              <li id="fn-6">Firecrawl. "Building Multi-Agent Systems with CrewAI — A Comprehensive Tutorial." firecrawl.dev. May 2025.{' '}<a href="#ref-6" className="mf-fn-back">↩</a></li>
+              <li id="fn-6">Firecrawl. "Building Multi-Agent Systems with CrewAI, A Comprehensive Tutorial." firecrawl.dev. May 2025.{' '}<a href="#ref-6" className="mf-fn-back">↩</a></li>
               <li id="fn-7">Ghosh, J. "Mastering CrewAI Flows: Building Hierarchical Multi-Agent Systems." Medium. August 2025.{' '}<a href="#ref-7" className="mf-fn-back">↩</a></li>
               <li id="fn-8">Towards Data Science. "How to Build Your Own Agentic AI System Using CrewAI." towardsdatascience.com. November 2025.{' '}<a href="#ref-8" className="mf-fn-back">↩</a></li>
               <li id="fn-9">36Kr English. "Claude's 'Shrimpification': Can't Kill OpenClaw but Sets a Ceiling for It." eu.36kr.com. March 2026.{' '}<a href="#ref-9" className="mf-fn-back">↩</a></li>
               <li id="fn-10">Immersive Labs. "Why You Should Uninstall OpenClaw AI Immediately: A Security Warning." immersivelabs.com. March 2026.{' '}<a href="#ref-10" className="mf-fn-back">↩</a></li>
-              <li id="fn-11">Data Science Dojo. "Prompt Injection & Claude Computer Use: 2026 Guide." datasciencedojo.com. March 2026.{' '}<a href="#ref-11" className="mf-fn-back">↩</a></li>
-              <li id="fn-12">ClaudeFast. "OpenClaw vs Claude Code: Which Should You Use? (2026)." claudefa.st. June 2026.{' '}<a href="#ref-12" className="mf-fn-back">↩</a></li>
+              <li id="fn-11">ClaudeFast. "OpenClaw vs Claude Code: Which Should You Use? (2026)." claudefa.st. June 2026.{' '}<a href="#ref-11" className="mf-fn-back">↩</a></li>
+              <li id="fn-12">Khan, A. Security disclosure on the February 2026 Cline npm supply-chain compromise, corroborated by Snyk and the Cloud Security Alliance.{' '}<a href="#ref-12" className="mf-fn-back">↩</a></li>
               <li id="fn-13">centminmod. "explain-openclaw: Prompt Injection Attacks." GitHub. March 2026.{' '}<a href="#ref-13" className="mf-fn-back">↩</a></li>
               <li id="fn-14">centminmod. "explain-openclaw: Prompt Injection Attacks." GitHub. March 2026.{' '}<a href="#ref-14" className="mf-fn-back">↩</a></li>
-              <li id="fn-15">Skywork AI / Gartner via Presidio. "The Definitive Guide to the OpenClaw System Prompt: Architecture, Products, and Future Trends." skywork.ai. March 2026.{' '}<a href="#ref-15" className="mf-fn-back">↩</a></li>
+              <li id="fn-15">Gartner. Enterprise AI agent adoption forecast (roughly 5% to 40% through 2026), as reported in industry coverage. 2026.{' '}<a href="#ref-15" className="mf-fn-back">↩</a></li>
             </ol>
           </section>
 
