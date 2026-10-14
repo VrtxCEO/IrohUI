@@ -5,6 +5,8 @@ import { LoginScreen } from './components/login/LoginScreen'
 import { BindScreen } from './components/connect/BindScreen'
 import { ConnectScreen } from './components/connect/ConnectScreen'
 import { ManifestoPage } from './components/manifesto/ManifestoPage'
+import { PreorderPage } from './components/preorder/PreorderPage'
+import { PreorderSuccess } from './components/preorder/PreorderSuccess'
 import { getToken, getStoredUser, getSession } from './lib/auth'
 import type { AuthUser, OsSession } from './lib/auth'
 import './index.css'
@@ -76,6 +78,12 @@ function AuthApp() {
 }
 
 export default function App() {
-  if (window.location.pathname === '/manifesto') return <ManifestoPage />
-  return <AuthApp />
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/manifesto') return <ManifestoPage />
+  if (path === '/preorder/success') return <PreorderSuccess />
+  // The Eyro app (sign in, pair a machine, the shell) lives at /app. A
+  // pairing link (?p=) opens it wherever it points, so QR codes made
+  // before the pre-order page still work.
+  if (path === '/app' || getBindParam()) return <AuthApp />
+  return <PreorderPage />
 }

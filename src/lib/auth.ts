@@ -6,7 +6,7 @@
  * Connection    → HMAC-SHA256(key=os_instance_id, msg=code) — both sides derive independently
  */
 
-const AUTH_BASE = import.meta.env.VITE_AUTH_URL ?? 'http://localhost:3000'
+export const AUTH_BASE = import.meta.env.VITE_AUTH_URL ?? 'http://localhost:3000'
 
 // ---------------------------------------------------------------------------
 // Types
