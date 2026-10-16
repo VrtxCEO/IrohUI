@@ -40,13 +40,15 @@ export function PreorderPage() {
   return (
     <div className="po">
       <header className="po-head">
-        <a className="po-brand" href="/"><img src={logoSrc} alt="" /> Eyro</a>
-        <nav>
-          <a className="po-navlink" href="#how">How it works</a>
-          <a className="po-navlink" href="#faq">FAQ</a>
-          <a className="po-navlink" href={MANIFESTO_URL}>Manifesto</a>
+        <a className="po-brand" href="/"><img src={logoSrc} alt="" /><strong>EYRO</strong></a>
+        <div className="po-head-right">
+          <nav className="po-nav" aria-label="Page">
+            <a href="#how">How it works</a>
+            <a href="#faq">FAQ</a>
+            <a href={MANIFESTO_URL}>Manifesto</a>
+          </nav>
           <a className="po-btn po-btn-sm" href={RESERVE_URL}>Reserve</a>
-        </nav>
+        </div>
       </header>
 
       <main>

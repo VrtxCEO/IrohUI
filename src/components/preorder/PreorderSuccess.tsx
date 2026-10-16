@@ -8,7 +8,7 @@ export function PreorderSuccess() {
   return (
     <div className="po">
       <header className="po-head">
-        <a className="po-brand" href="/"><img src={logoSrc} alt="" /> Eyro</a>
+        <a className="po-brand" href="/"><img src={logoSrc} alt="" /><strong>EYRO</strong></a>
       </header>
       <main className="po-done">
         <p className="po-kicker">Reserved</p>
