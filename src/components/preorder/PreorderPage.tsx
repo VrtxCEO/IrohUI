@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import eyroEyeSrc from '../../assets/eyro_eye.svg'
+import logoSrc from '../../assets/omni-ouro-logo.png'
 import productShot from '../../assets/mini/eyro-mini.webp'
-import { BALANCE, DEVICE_PRICE, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
+import { BALANCE, DEVICE_PRICE, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
 import type { ShareResult } from '../../lib/preorder'
 import './preorder.css'
 
@@ -40,11 +40,11 @@ export function PreorderPage() {
   return (
     <div className="po">
       <header className="po-head">
-        <a className="po-brand" href="/"><img src={eyroEyeSrc} alt="" /> Eyro</a>
+        <a className="po-brand" href="/"><img src={logoSrc} alt="" /> Eyro</a>
         <nav>
           <a className="po-navlink" href="#how">How it works</a>
           <a className="po-navlink" href="#faq">FAQ</a>
-          <a className="po-navlink" href="/manifesto">Manifesto</a>
+          <a className="po-navlink" href={MANIFESTO_URL}>Manifesto</a>
           <a className="po-btn po-btn-sm" href={RESERVE_URL}>Reserve</a>
         </nav>
       </header>
@@ -130,7 +130,7 @@ export function PreorderPage() {
       <footer className="po-foot">
         <span>© {new Date().getFullYear()} <a href="https://omni-ouro.com">Omni-Ouro</a></span>
         <nav>
-          <a href="/manifesto">Manifesto</a>
+          <a href={MANIFESTO_URL}>Manifesto</a>
           <a href="/app">Eyro app</a>
         </nav>
       </footer>

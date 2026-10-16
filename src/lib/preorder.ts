@@ -7,6 +7,7 @@
 
 export const RESERVE_URL = 'https://buy.stripe.com/eVqeVd3qr1kLbv0ajTdMI00'
 export const SITE_URL = 'https://eyro.io'
+export const MANIFESTO_URL = 'https://www.omni-ouro.com/manifesto'
 
 export const DEVICE_PRICE = 699
 export const RESERVE_PRICE = 30

@@ -1,4 +1,4 @@
-import eyroEyeSrc from '../../assets/eyro_eye.svg'
+import logoSrc from '../../assets/omni-ouro-logo.png'
 import { BALANCE, REFUND_BY, RESERVE_PRICE, SHIPPING } from '../../lib/preorder'
 import './preorder.css'
 
@@ -8,7 +8,7 @@ export function PreorderSuccess() {
   return (
     <div className="po">
       <header className="po-head">
-        <a className="po-brand" href="/"><img src={eyroEyeSrc} alt="" /> Eyro</a>
+        <a className="po-brand" href="/"><img src={logoSrc} alt="" /> Eyro</a>
       </header>
       <main className="po-done">
         <p className="po-kicker">Reserved</p>
