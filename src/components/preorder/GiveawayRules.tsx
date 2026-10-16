@@ -38,7 +38,7 @@ export function GiveawayRules() {
         <p>
           Each calendar month is a separate entry period, from 12:00 a.m. Central Time on the first
           day of the month to 11:59 p.m. Central Time on its last day. The first entry period is
-          December 2026. The giveaway continues month by month until Sponsor ends it by updating this
+          January 2027. The giveaway continues month by month until Sponsor ends it by updating this
           page; ending it does not affect an entry period already underway.
         </p>
 
@@ -66,6 +66,12 @@ export function GiveawayRules() {
           prize cannot be transferred or exchanged for cash. Sponsor may substitute a prize of equal or
           greater value. The winner is responsible for any taxes. Sponsor will report the prize’s
           value to the IRS on Form 1099 and requires a completed Form W-9 before the prize ships.
+        </p>
+        <p>
+          Reserving or buying an Eyro Mini does not affect eligibility. If the winner has reserved one,
+          Sponsor will ask whether they want to cancel the reservation, with their reservation payment
+          refunded in full, and receive the prize in its place, or keep the reservation and receive
+          both.
         </p>
 
         <h2>7. Notifying the winner</h2>

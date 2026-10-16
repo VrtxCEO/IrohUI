@@ -5,7 +5,7 @@
  * Follows the official rules (eyro.io/giveaway): everyone in the Discord
  * server at the end of the month is entered, and one is drawn at random.
  *
- *   DISCORD_BOT_TOKEN=... DISCORD_GUILD_ID=... node scripts/giveaway-draw.mjs 2026-12
+ *   DISCORD_BOT_TOKEN=... DISCORD_GUILD_ID=... node scripts/giveaway-draw.mjs 2027-01
  *
  * Options:
  *   --exclude id,id   Discord user ids that can't win (Sponsor's staff).
@@ -37,7 +37,7 @@ function args() {
     else if (a[i] === '--members') out.members = a[++i]
     else out.period = a[i]
   }
-  if (!/^\d{4}-\d{2}$/.test(out.period ?? '')) fail('Give the month to draw as YYYY-MM, e.g. 2026-12')
+  if (!/^\d{4}-\d{2}$/.test(out.period ?? '')) fail('Give the month to draw as YYYY-MM, e.g. 2027-01')
   return out
 }
 

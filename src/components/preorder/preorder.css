@@ -74,6 +74,7 @@
 .po main.po-rules{max-width:760px;padding:72px clamp(18px,4vw,32px) 96px;}
 .po-rules h1{font-size:clamp(38px,6vw,60px);}
 .po-rules h2{max-width:none;margin:40px 0 12px;font-size:20px;letter-spacing:-.01em;line-height:1.3;}
+.po-rules p+p{margin-top:14px;}
 .po-rules p{margin:0;color:var(--soft);font-size:16px;line-height:1.7;}
 .po-rules a{text-decoration:underline;text-underline-offset:3px;}
 .po-rules .po-rules-lead{padding:18px 20px;border:1px solid var(--line-bright);border-radius:12px;background:var(--panel);color:var(--text);font-weight:600;}
