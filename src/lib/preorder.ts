@@ -1,82 +1,65 @@
 /**
- * preorder.ts — Eyro Mini reservations, through Vortex and Stripe Checkout.
+ * preorder.ts — Eyro Mini reservations, through a Stripe Payment Link.
  *
- * Signing in is encouraged, never required: a signed-in buyer's token rides
- * along so the reservation joins their account; a guest gives Stripe an email.
+ * The amounts below are shown on the page only. Stripe charges whatever the
+ * Payment Link's price is, so change both together.
  */
-import { AUTH_BASE, getToken } from './auth'
 
-export type Plan = 'standard' | 'rush'
+export const RESERVE_URL = 'https://buy.stripe.com/eVqeVd3qr1kLbv0ajTdMI00'
+export const SITE_URL = 'https://eyro.io'
 
-export interface PlanInfo {
-  id: Plan
-  label: string
-  device_cents: number
-  balance_cents: number
-  delivery: string
+export const DEVICE_PRICE = 699
+export const RESERVE_PRICE = 30
+export const SHIPPING = 'January 2027'
+export const REFUND_BY = 'January 31, 2027'
+export const BALANCE = DEVICE_PRICE - RESERVE_PRICE
+
+// The Stripe promotion code a mailing-list signup is shown on the page. It
+// must exist in Stripe, and the Payment Link must allow promotion codes.
+// Empty: the page tells them to check their inbox instead.
+export const PROMO_CODE = 'AGENT50'
+
+/** The Payment Link, with the promotion code already filled in at checkout. */
+export function reserveUrl(code = ''): string {
+  return code ? `${RESERVE_URL}?prefilled_promo_code=${encodeURIComponent(code)}` : RESERVE_URL
 }
 
-export interface PreorderInfo {
-  device: string
-  deposit: { amount_cents: number; currency: string }
-  plans: PlanInfo[]
-  terms: string
+// Same Buttondown list and tag as omni-ouro.com's signup form. A reservation
+// is a purchase, not support, so eyro.io never applies a payer tag. The tag
+// name must match the Buttondown dashboard exactly, or it creates a new tag.
+const MAILING_LIST_ENDPOINT = 'https://buttondown.com/api/emails/embed-subscribe/OmniDon'
+const LIST_ONLY_TAG = 'List-only'
+
+/** Resolves true when Buttondown accepted the email. A successful signup may
+ *  redirect to a Buttondown page, which counts as success. */
+export async function subscribe(email: string): Promise<boolean> {
+  const form = new FormData()
+  form.set('email', email)
+  form.set('tag', LIST_ONLY_TAG)
+  const res = await fetch(MAILING_LIST_ENDPOINT, { method: 'POST', body: form, redirect: 'manual' })
+  return res.ok || res.type === 'opaqueredirect'
 }
 
-export interface Reservation {
-  id: string
-  plan: Plan
-  delivery: string
-  status: 'reserved' | 'refunded'
-  deposit_cents: number
-  currency: string
-  device_cents: number
-  reserved_at: string
-}
+export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'failed'
 
-function authHeaders(): Record<string, string> {
-  const t = getToken()
-  return t && t !== 'dev-token' ? { Authorization: `Bearer ${t}` } : {}
-}
-
-async function json<T>(res: Response): Promise<T> {
-  const body = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(String((body as Record<string, unknown>).error ?? `Request failed (${res.status})`))
-  return body as T
-}
-
-export async function fetchPreorderInfo(): Promise<PreorderInfo> {
-  return json(await fetch(`${AUTH_BASE}/api/preorder`))
-}
-
-/** Start checkout and go to Stripe. */
-export async function reserve(plan: Plan): Promise<void> {
-  const { url } = await json<{ url: string }>(
-    await fetch(`${AUTH_BASE}/api/preorder/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ plan }),
-    }),
-  )
-  window.location.assign(url)
-}
-
-export async function fetchMyReservations(): Promise<Reservation[]> {
-  const { reservations } = await json<{ reservations: Reservation[] }>(
-    await fetch(`${AUTH_BASE}/api/preorder/mine`, { headers: authHeaders() }),
-  )
-  return reservations
-}
-
-export async function fetchCheckoutResult(sessionId: string): Promise<{ paid: boolean; plan: Plan; delivery: string; email: string | null }> {
-  return json(await fetch(`${AUTH_BASE}/api/preorder/session?id=${encodeURIComponent(sessionId)}`))
-}
-
-export function money(cents: number, currency = 'usd'): string {
-  const whole = cents % 100 === 0
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: whole ? 0 : 2,
-  }).format(cents / 100)
+/** The phone's share sheet where there is one, otherwise copy the link. */
+export async function shareEyro(): Promise<ShareResult> {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Eyro Mini',
+        text: `Eyro Mini: reserve one for $${RESERVE_PRICE}. Shipments start ${SHIPPING}.`,
+        url: SITE_URL,
+      })
+      return 'shared'
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return 'cancelled'
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(SITE_URL)
+    return 'copied'
+  } catch {
+    return 'failed'
+  }
 }
