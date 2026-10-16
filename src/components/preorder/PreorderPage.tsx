@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import logoSrc from '../../assets/omni-ouro-logo.png'
 import productShot from '../../assets/mini/eyro-mini.webp'
-import { BALANCE, DEVICE_PRICE, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
+import { BALANCE, DEVICE_PRICE, DISCORD_URL, GIVEAWAY_START, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
 import type { ShareResult } from '../../lib/preorder'
 import './preorder.css'
 
@@ -34,6 +34,7 @@ const FAQ = [
   ['How do I get the discount?', 'Join the mailing list on this page. Your promotion code shows up right there, and the Reserve button applies it at checkout.'],
   ['When do I pay the rest?', `Before your unit ships. We email you first, and the $${RESERVE_PRICE} you paid comes off the price.`],
   ['Do I need an account?', 'No. Checkout only asks for your email and card.'],
+  ['How does the giveaway work?', `Starting in ${GIVEAWAY_START}, we give away one Eyro Mini a month. Everyone in the Eyro Discord at the end of a month is entered, and one member is drawn at random. Open to US residents 18 and older; no purchase necessary. The official rules are at eyro.io/giveaway.`],
 ]
 
 export function PreorderPage() {
@@ -44,6 +45,7 @@ export function PreorderPage() {
         <div className="po-head-right">
           <nav className="po-nav" aria-label="Page">
             <a href="#how">How it works</a>
+            <a href="#giveaway">Giveaway</a>
             <a href="#faq">FAQ</a>
             <a href={MANIFESTO_URL}>Manifesto</a>
           </nav>
@@ -75,6 +77,26 @@ export function PreorderPage() {
         </section>
 
         <MailingList />
+
+        <section className="po-section" id="giveaway">
+          <div className="po-give">
+            <div>
+              <p className="po-kicker">Giveaway · Starting {GIVEAWAY_START}</p>
+              <h2>Win an Eyro Mini every month</h2>
+              <p className="po-lede">
+                Join the Eyro Discord and you’re entered. Each month we draw one member at random,
+                and you stay in every draw for as long as you’re in the server.
+              </p>
+            </div>
+            <div className="po-give-side">
+              <div className="po-cta">
+                <a className="po-btn" href={DISCORD_URL} target="_blank" rel="noreferrer">Join the Discord</a>
+                <a className="po-btn po-btn-ghost" href="/giveaway">Official rules</a>
+              </div>
+              <p className="po-give-fine">No purchase necessary. Reserving doesn’t improve your odds. US residents 18 and older.</p>
+            </div>
+          </div>
+        </section>
 
         <section className="po-section">
           <p className="po-kicker">Why Eyro</p>
@@ -132,6 +154,8 @@ export function PreorderPage() {
       <footer className="po-foot">
         <span>© {new Date().getFullYear()} <a href="https://omni-ouro.com">Omni-Ouro</a></span>
         <nav>
+          <a href={DISCORD_URL} target="_blank" rel="noreferrer">Discord</a>
+          <a href="/giveaway">Giveaway rules</a>
           <a href={MANIFESTO_URL}>Manifesto</a>
           <a href="/app">Eyro app</a>
         </nav>

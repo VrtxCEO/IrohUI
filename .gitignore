@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Giveaway draw records: they hold Discord members' ids and names
+giveaway-draws/

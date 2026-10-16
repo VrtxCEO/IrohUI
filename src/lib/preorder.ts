@@ -9,6 +9,11 @@ export const RESERVE_URL = 'https://buy.stripe.com/eVqeVd3qr1kLbv0ajTdMI00'
 export const SITE_URL = 'https://eyro.io'
 export const MANIFESTO_URL = 'https://www.omni-ouro.com/manifesto'
 
+// The monthly giveaway: being in this server at the end of a month is the
+// entry. Rules at /giveaway; the draw is scripts/giveaway-draw.mjs.
+export const DISCORD_URL = 'https://discord.gg/2WNKQY8wdc'
+export const GIVEAWAY_START = 'December 2026'
+
 export const DEVICE_PRICE = 699
 export const RESERVE_PRICE = 30
 export const SHIPPING = 'January 2027'

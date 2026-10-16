@@ -1,5 +1,5 @@
 import logoSrc from '../../assets/omni-ouro-logo.png'
-import { BALANCE, REFUND_BY, RESERVE_PRICE, SHIPPING } from '../../lib/preorder'
+import { BALANCE, DISCORD_URL, REFUND_BY, RESERVE_PRICE, SHIPPING } from '../../lib/preorder'
 import './preorder.css'
 
 /** Where the Stripe Payment Link sends buyers after paying. Stripe emails the
@@ -18,7 +18,14 @@ export function PreorderSuccess() {
           you before yours ships, when the ${BALANCE} balance is due. If shipping hasn’t started by
           {' '}{REFUND_BY}, we refund your ${RESERVE_PRICE} in full.
         </p>
-        <a className="po-btn" href="/">Back to Eyro Mini</a>
+        <p className="po-lede">
+          While you wait, join the Eyro Discord. Members are entered in our monthly Eyro Mini
+          giveaway. <a href="/giveaway">Rules</a>.
+        </p>
+        <div className="po-cta">
+          <a className="po-btn" href={DISCORD_URL} target="_blank" rel="noreferrer">Join the Discord</a>
+          <a className="po-btn po-btn-ghost" href="/">Back to Eyro Mini</a>
+        </div>
       </main>
     </div>
   )
