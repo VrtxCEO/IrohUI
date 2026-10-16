@@ -25,18 +25,19 @@ export function reserveUrl(code = ''): string {
   return code ? `${RESERVE_URL}?prefilled_promo_code=${encodeURIComponent(code)}` : RESERVE_URL
 }
 
-// Same Buttondown list and tag as omni-ouro.com's signup form. A reservation
-// is a purchase, not support, so eyro.io never applies a payer tag. The tag
-// name must match the Buttondown dashboard exactly, or it creates a new tag.
+// Same Buttondown list and List-only tag as omni-ouro.com's signup form, plus
+// EyroMini to mark who came through eyro.io. A reservation is a purchase, not
+// support, so eyro.io never applies a payer tag. Tag names must match the
+// Buttondown dashboard exactly, or it creates a new tag.
 const MAILING_LIST_ENDPOINT = 'https://buttondown.com/api/emails/embed-subscribe/OmniDon'
-const LIST_ONLY_TAG = 'List-only'
+const TAGS = ['List-only', 'EyroMini']
 
 /** Resolves true when Buttondown accepted the email. A successful signup may
  *  redirect to a Buttondown page, which counts as success. */
 export async function subscribe(email: string): Promise<boolean> {
   const form = new FormData()
   form.set('email', email)
-  form.set('tag', LIST_ONLY_TAG)
+  for (const tag of TAGS) form.append('tag', tag)
   const res = await fetch(MAILING_LIST_ENDPOINT, { method: 'POST', body: form, redirect: 'manual' })
   return res.ok || res.type === 'opaqueredirect'
 }
