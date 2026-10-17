@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import logoSrc from '../../assets/omni-ouro-logo.png'
 import productShot from '../../assets/mini/eyro-mini.webp'
 import { BALANCE, DEVICE_PRICE, DISCORD_URL, GIVEAWAY_START, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
 import type { ShareResult } from '../../lib/preorder'
+import { trackCheckout, trackLead } from '../../lib/pixel'
 import './preorder.css'
 
 const SPECS = [
@@ -38,6 +39,17 @@ const FAQ = [
 ]
 
 export function PreorderPage() {
+  // Every Reserve button, with or without the promotion code, is a link to
+  // the Payment Link; one listener counts them all.
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      const link = (e.target as Element).closest?.('a')
+      if (link?.href.startsWith(RESERVE_URL)) trackCheckout()
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [])
+
   return (
     <div className="po">
       <header className="po-head">
@@ -156,6 +168,7 @@ export function PreorderPage() {
         <nav>
           <a href={DISCORD_URL} target="_blank" rel="noreferrer">Discord</a>
           <a href="/giveaway">Giveaway rules</a>
+          <a href="/privacy">Privacy</a>
           <a href={MANIFESTO_URL}>Manifesto</a>
           <a href="/app">Eyro app</a>
         </nav>
@@ -174,6 +187,7 @@ function MailingList() {
     e.preventDefault()
     setState('busy')
     const ok = await subscribe(email.trim()).catch(() => false)
+    if (ok) trackLead()
     setState(ok ? 'done' : 'error')
   }
 

@@ -95,7 +95,7 @@ export function GiveawayRules() {
         <h2>9. Privacy</h2>
         <p>
           Sponsor uses the information a winner provides only to deliver the prize and meet tax
-          reporting requirements.
+          reporting requirements. See the <a href="/privacy">privacy policy</a>.
         </p>
 
         <h2>10. Winners list</h2>

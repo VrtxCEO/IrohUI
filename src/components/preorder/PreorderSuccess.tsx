@@ -1,10 +1,14 @@
+import { useEffect } from 'react'
 import logoSrc from '../../assets/omni-ouro-logo.png'
 import { BALANCE, DISCORD_URL, REFUND_BY, RESERVE_PRICE, SHIPPING } from '../../lib/preorder'
+import { trackPurchase } from '../../lib/pixel'
 import './preorder.css'
 
 /** Where the Stripe Payment Link sends buyers after paying. Stripe emails the
  *  receipt; this page only says what happens next. */
 export function PreorderSuccess() {
+  useEffect(trackPurchase, [])
+
   return (
     <div className="po">
       <header className="po-head">

@@ -7,6 +7,7 @@ import { ConnectScreen } from './components/connect/ConnectScreen'
 import { PreorderPage } from './components/preorder/PreorderPage'
 import { PreorderSuccess } from './components/preorder/PreorderSuccess'
 import { GiveawayRules } from './components/preorder/GiveawayRules'
+import { PrivacyPolicy } from './components/preorder/PrivacyPolicy'
 import { getToken, getStoredUser, getSession } from './lib/auth'
 import type { AuthUser, OsSession } from './lib/auth'
 import './index.css'
@@ -81,6 +82,7 @@ export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
   if (path === '/preorder/success') return <PreorderSuccess />
   if (path === '/giveaway') return <GiveawayRules />
+  if (path === '/privacy') return <PrivacyPolicy />
   // The Eyro app (sign in, pair a machine, the shell) lives at /app. A
   // pairing link (?p=) opens it wherever it points, so QR codes made
   // before the pre-order page still work.
