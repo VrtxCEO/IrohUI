@@ -52,8 +52,9 @@ export function PreorderPage() {
             <p className="po-kicker">Pre-order · Shipping {SHIPPING}</p>
             <h1>Eyro Mini</h1>
             <p className="po-lede">
-              A small computer with Eyro as its operating system. Your agent asks for every action,
-              and Eyro decides under the rules you set. Every decision is on the record.
+              <strong>Your own AI, on your own hardware.</strong> Use it like any other agent, and decide
+              how much freedom it gets. Loosen or tighten the rules whenever you like, and Eyro
+              enforces them every time.
             </p>
             <div className="po-price">
               <div className="po-price-row">
