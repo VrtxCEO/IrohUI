@@ -7,7 +7,10 @@ import './preorder.css'
 /** Where the Stripe Payment Link sends buyers after paying. Stripe emails the
  *  receipt; this page only says what happens next. */
 export function PreorderSuccess() {
-  useEffect(trackPurchase, [])
+  // Stripe's redirect carries the Checkout Session: /preorder/success?session_id=cs_...
+  useEffect(() => {
+    void trackPurchase(new URLSearchParams(window.location.search).get('session_id'))
+  }, [])
 
   return (
     <div className="po">

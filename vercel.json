@@ -3,6 +3,6 @@
     { "source": "/manifesto", "destination": "https://www.omni-ouro.com/manifesto", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

@@ -11,7 +11,7 @@ export function PrivacyPolicy() {
         <a className="po-brand" href="/"><img src={logoSrc} alt="" /><strong>EYRO</strong></a>
       </header>
       <main className="po-rules">
-        <p className="po-kicker">Last updated: 2026-10-16</p>
+        <p className="po-kicker">Last updated: 2026-10-19</p>
         <h1>Privacy Policy</h1>
         <p className="po-rules-lead">
           eyro.io is run by Omni-Ouro. We collect what we need to take your reservation, email you,
@@ -33,12 +33,15 @@ export function PrivacyPolicy() {
           perform and helps us show them to people likely to be interested. When you visit, it sends
           Meta the pages you view and a few actions: clicking Reserve, joining the mailing list, and
           reaching the reservation confirmation page. Meta also receives technical details such as your
-          IP address and browser, and may set a cookie. Meta uses this under its own{' '}
+          IP address and browser, and may set a cookie. When you complete a reservation, our server also
+          reports the purchase to Meta directly, with the amount paid and your email, name, phone and
+          billing address from checkout in hashed (scrambled) form, so Meta can match it to its ads
+          without receiving them in plain text. Meta uses this under its own{' '}
           <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer">privacy policy</a>.
         </p>
         <p>
-          To opt out, turn on Global Privacy Control in your browser and eyro.io won’t load the pixel at
-          all. You can also manage ad tracking in your{' '}
+          To opt out, turn on Global Privacy Control in your browser: eyro.io won’t load the pixel at
+          all, and our server won’t report your purchase to Meta. You can also manage ad tracking in your{' '}
           <a href="https://accountscenter.facebook.com/ad_preferences" target="_blank" rel="noreferrer">Meta ad preferences</a>,
           or email us.
         </p>
