@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import logoSrc from '../../assets/omni-ouro-logo.png'
 import productShot from '../../assets/mini/eyro-mini.webp'
-import { BALANCE, DEVICE_PRICE, DISCORD_URL, GIVEAWAY_START, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
+import { BALANCE, DEAL_ACTIVE, DEAL_ENDS, DEAL_PERCENT, DEVICE_PRICE, PREORDER_PRICE, REGULAR_PRICE, DISCORD_URL, GIVEAWAY_START, MANIFESTO_URL, PROMO_CODE, REFUND_BY, RESERVE_PRICE, RESERVE_URL, SHIPPING, reserveUrl, shareEyro, subscribe } from '../../lib/preorder'
 import type { ShareResult } from '../../lib/preorder'
-import { trackCheckout, trackLead } from '../../lib/pixel'
+import { trackLead } from '../../lib/pixel'
+import { SiteHeader } from './SiteHeader'
 import './preorder.css'
 
 const SPECS = [
@@ -32,38 +32,19 @@ const STEPS = [
 const FAQ = [
   ['Is the reservation refundable?', `If shipping hasn’t started by ${REFUND_BY}, we refund your $${RESERVE_PRICE} in full.`],
   ['When will mine ship?', `Shipments start in ${SHIPPING}, and units go out in the order they were reserved.`],
-  ['How do I get the discount?', 'Join the mailing list on this page. Your promotion code shows up right there, and the Reserve button applies it at checkout.'],
-  ['When do I pay the rest?', `Before your unit ships. We email you first, and the $${RESERVE_PRICE} you paid comes off the price.`],
+  ...(DEAL_ACTIVE
+    ? [['Why is it $' + PREORDER_PRICE + '?', `It’s the pre-order price: $${PREORDER_PRICE} instead of the regular $${REGULAR_PRICE}, ${DEAL_PERCENT}% off, for reservations made by ${DEAL_ENDS}. Reserve now and that’s the price you pay.`]]
+    : []),
+  ['How do I get the reservation discount?', 'Join the mailing list on this page. Your promotion code shows up right there, and the Reserve button applies it at checkout.'],
+  ['When do I pay the rest?', `Before your unit ships. We email you first. The balance is $${BALANCE}: the price less the full $${RESERVE_PRICE} reservation, even if you reserved for less with the promotion code.`],
   ['Do I need an account?', 'No. Checkout only asks for your email and card.'],
   ['How does the giveaway work?', `Starting in ${GIVEAWAY_START}, we give away one Eyro Mini a month. Everyone in the Eyro Discord at the end of a month is entered, and one member is drawn at random. Open to US residents 18 and older; no purchase necessary. The official rules are at eyro.io/giveaway.`],
 ]
 
 export function PreorderPage() {
-  // Every Reserve button, with or without the promotion code, is a link to
-  // the Payment Link; one listener counts them all.
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      const link = (e.target as Element).closest?.('a')
-      if (link?.href.startsWith(RESERVE_URL)) trackCheckout()
-    }
-    document.addEventListener('click', onClick)
-    return () => document.removeEventListener('click', onClick)
-  }, [])
-
   return (
     <div className="po">
-      <header className="po-head">
-        <a className="po-brand" href="/"><img src={logoSrc} alt="" /><strong>EYRO</strong></a>
-        <div className="po-head-right">
-          <nav className="po-nav" aria-label="Page">
-            <a href="#how">How it works</a>
-            <a href="#giveaway">Giveaway</a>
-            <a href="#faq">FAQ</a>
-            <a href={MANIFESTO_URL}>Manifesto</a>
-          </nav>
-          <a className="po-btn po-btn-sm" href={RESERVE_URL}>Reserve</a>
-        </div>
-      </header>
+      <SiteHeader onLanding />
 
       <main>
         <section className="po-hero">
@@ -75,8 +56,18 @@ export function PreorderPage() {
               and Eyro decides under the rules you set. Every decision is on the record.
             </p>
             <div className="po-price">
-              <span className="po-price-big">${DEVICE_PRICE}</span>
-              <span>Reserve today for ${RESERVE_PRICE}, credited toward the price. Refunded in full if shipping hasn’t started by {REFUND_BY}.</span>
+              <div className="po-price-row">
+                {DEAL_ACTIVE && (
+                  <s className="po-price-was" aria-label={`Regular price $${REGULAR_PRICE}`}>${REGULAR_PRICE}</s>
+                )}
+                <span className="po-price-big">${DEVICE_PRICE}</span>
+                {DEAL_ACTIVE && <span className="po-price-off">{DEAL_PERCENT}% off</span>}
+              </div>
+              <span>
+                {DEAL_ACTIVE && <strong>Pre-order price, for reservations made by {DEAL_ENDS}. </strong>}
+                Reserve today for ${RESERVE_PRICE}, credited toward the price, and pay ${BALANCE} when it ships.
+                Refunded in full if shipping hasn’t started by {REFUND_BY}.
+              </span>
             </div>
             <div className="po-cta">
               <a className="po-btn" href={RESERVE_URL}>Reserve for ${RESERVE_PRICE}</a>
@@ -155,7 +146,10 @@ export function PreorderPage() {
 
         <section className="po-section po-final">
           <h2>Reserve your Eyro Mini</h2>
-          <p className="po-lede">${RESERVE_PRICE} today. Shipments start in {SHIPPING}.</p>
+          <p className="po-lede">
+            {DEAL_ACTIVE && <>${PREORDER_PRICE} instead of <s>${REGULAR_PRICE}</s> until {DEAL_ENDS}. </>}
+            ${RESERVE_PRICE} today. Shipments start in {SHIPPING}.
+          </p>
           <div className="po-cta">
             <a className="po-btn" href={RESERVE_URL}>Reserve for ${RESERVE_PRICE}</a>
             <ShareButton />
@@ -169,6 +163,7 @@ export function PreorderPage() {
           <a href={DISCORD_URL} target="_blank" rel="noreferrer">Discord</a>
           <a href="/giveaway">Giveaway rules</a>
           <a href="/privacy">Privacy</a>
+          <a href="/integrations">Integrations</a>
           <a href={MANIFESTO_URL}>Manifesto</a>
           <a href="/app">Eyro app</a>
         </nav>

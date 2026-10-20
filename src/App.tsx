@@ -8,6 +8,7 @@ import { PreorderPage } from './components/preorder/PreorderPage'
 import { PreorderSuccess } from './components/preorder/PreorderSuccess'
 import { GiveawayRules } from './components/preorder/GiveawayRules'
 import { PrivacyPolicy } from './components/preorder/PrivacyPolicy'
+import { IntegrationPage, IntegrationsIndex } from './components/preorder/IntegrationPages'
 import { getToken, getStoredUser, getSession } from './lib/auth'
 import type { AuthUser, OsSession } from './lib/auth'
 import './index.css'
@@ -83,6 +84,8 @@ export default function App() {
   if (path === '/preorder/success') return <PreorderSuccess />
   if (path === '/giveaway') return <GiveawayRules />
   if (path === '/privacy') return <PrivacyPolicy />
+  if (path === '/integrations') return <IntegrationsIndex />
+  if (path.startsWith('/integrations/')) return <IntegrationPage slug={path.slice('/integrations/'.length)} />
   // The Eyro app (sign in, pair a machine, the shell) lives at /app. A
   // pairing link (?p=) opens it wherever it points, so QR codes made
   // before the pre-order page still work.

@@ -20,8 +20,50 @@
 .po-brand strong{font-size:14px;letter-spacing:.22em;}
 .po-head-right{display:flex;align-items:center;gap:12px;}
 .po-nav{display:flex;gap:8px;padding:5px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,0.035);}
-.po-nav a{display:inline-flex;align-items:center;min-height:38px;padding:0 15px;border:1px solid transparent;border-radius:999px;color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap;transition:background 160ms ease,color 160ms ease,border-color 160ms ease;}
-.po-nav a:hover{border-color:var(--line-bright);background:#fff;color:#000;}
+.po-nav>a,.po-int>a{display:inline-flex;align-items:center;min-height:38px;padding:0 15px;border:1px solid transparent;border-radius:999px;color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap;transition:background 160ms ease,color 160ms ease,border-color 160ms ease;}
+.po-nav>a:hover,.po-int>a:hover{border-color:var(--line-bright);background:#fff;color:#000;}
+
+/* "Integrations & Adapters" in the header pill, and its hover panel. */
+.po-int{position:relative;display:flex;}
+.po .po-int>a.on{border-color:var(--line-bright);background:#fff;color:#000;}
+.po-int-panel{position:absolute;top:calc(100% + 10px);left:50%;z-index:10;width:340px;transform:translateX(-50%);padding:10px;border:1px solid var(--line-bright);border-radius:14px;background:var(--panel);box-shadow:0 24px 90px rgba(0,0,0,.72);}
+.po-int-panel::before{content:'';position:absolute;inset:-12px 0 auto;height:12px;}
+.po-int-search{width:100%;min-height:40px;padding:0 12px;border:1px solid var(--line-bright);border-radius:10px;background:#000;color:var(--text);font:14px Inter,Arial,sans-serif;}
+.po-int-search:focus{outline:none;border-color:#fff;}
+.po-int-list{display:grid;gap:2px;max-height:320px;margin-top:8px;overflow-y:auto;}
+.po .po-int-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;color:var(--text);}
+.po .po-int-item:hover,.po .po-int-item:focus{background:var(--panel-soft);outline:none;}
+.po-int-text{display:grid;flex:1;min-width:0;}
+.po-int-text strong{font-size:14px;font-weight:700;}
+.po-int-text small{overflow:hidden;color:var(--muted);font-size:12.5px;text-overflow:ellipsis;white-space:nowrap;}
+.po-int-kind{flex:none;padding:3px 8px;border:1px solid var(--line-bright);border-radius:999px;color:var(--soft);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+.po-int-logo{flex:none;border-radius:8px;object-fit:contain;}
+.po-int-mono{display:grid;place-items:center;background:#fff;color:#000;font-weight:800;}
+.po-int-empty{margin:10px;color:var(--muted);font-size:13px;}
+.po .po-int-all{display:block;margin-top:6px;padding:10px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:700;}
+.po .po-int-all:hover{color:var(--text);}
+
+/* /integrations and /integrations/<slug>. */
+.po main.po-ints{max-width:880px;padding:64px clamp(18px,4vw,32px) 96px;}
+.po main.po-ints h1{font-size:clamp(40px,6vw,64px);}
+.po main.po-ints h2{max-width:none;margin:48px 0 16px;font-size:24px;letter-spacing:-.02em;line-height:1.2;}
+.po-ints-search{max-width:420px;margin:32px 0 20px;min-height:48px;font-size:16px;}
+.po-ints-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.po .po-ints-card{display:block;padding:20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel);transition:border-color 140ms ease;}
+.po .po-ints-card:hover{border-color:#555;}
+.po-ints-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.po-ints-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.55;}
+.po .po-ints-back{display:inline-block;margin-bottom:28px;color:var(--muted);font-size:14px;}
+.po .po-ints-back:hover{color:var(--text);}
+.po-ints-head{display:flex;align-items:center;gap:20px;margin-bottom:22px;}
+.po-ints-head h1{margin:0;}
+.po-ints-head .po-kicker{margin-bottom:6px;}
+.po .po-ints-site{display:inline-block;margin-top:18px;font-weight:700;text-decoration:underline;text-underline-offset:3px;}
+.po-ints-how{display:grid;gap:12px;margin:0;padding:0;list-style:none;}
+.po-ints-how li{padding:16px 20px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--soft);line-height:1.6;}
+.po-ints-video{display:block;width:100%;border:1px solid var(--line-bright);border-radius:14px;background:#000;}
+.po-ints-soon{display:grid;place-items:center;aspect-ratio:16/9;padding:24px;border:1px dashed var(--line-bright);border-radius:14px;background:var(--panel);color:var(--muted);text-align:center;}
+.po-ints-cta{margin-top:48px;}
 
 .po-btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border:1px solid #fff;border-radius:10px;background:#fff;color:#000!important;font:800 14px Inter,Arial,sans-serif;cursor:pointer;white-space:nowrap;transition:background 140ms ease,border-color 140ms ease;}
 .po-btn:hover{background:var(--soft);border-color:var(--soft);}
@@ -39,8 +81,16 @@
 
 .po-hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:56px 0 72px;animation:poFade .5s ease both;}
 @keyframes poFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.po-price{display:flex;align-items:baseline;gap:16px;max-width:46ch;margin:30px 0 26px;color:var(--muted);font-size:14px;line-height:1.55;}
-.po-price-big{color:var(--text);font-size:38px;font-weight:800;letter-spacing:-.03em;}
+.po-price{display:grid;gap:10px;max-width:50ch;margin:30px 0 26px;color:var(--muted);font-size:14px;line-height:1.55;}
+.po-price strong{color:var(--text);font-weight:700;}
+.po-price-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;}
+.po-price-big{color:var(--text);font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;}
+/* The regular price, crossed out with an X. */
+.po-price-was{position:relative;color:var(--muted);font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;text-decoration:none;}
+.po-price-was::before,.po-price-was::after{content:'';position:absolute;top:50%;left:-4px;right:-4px;height:2px;border-radius:2px;background:#ff4f4f;opacity:.9;}
+.po-price-was::before{transform:rotate(22deg);}
+.po-price-was::after{transform:rotate(-22deg);}
+.po-price-off{padding:5px 10px;border-radius:999px;background:#fff;color:#000;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
 .po-cta{display:flex;flex-wrap:wrap;gap:12px;}
 /* The product photo is shot on white, so it sits on its own white card. */
 .po-shot{overflow:hidden;padding:6%;border-radius:16px;background:#f5f5f3;box-shadow:0 24px 90px rgba(0,0,0,.72),0 0 0 1px var(--line-bright);}
@@ -130,7 +180,6 @@
   .po-hero,.po-split,.po-list,.po-compare,.po-give{grid-template-columns:1fr;}
   .po-hero{gap:32px;padding:24px 0 48px;}
   .po-shot{order:-1;}
-  .po-price{flex-direction:column;gap:4px;}
   .po-grid,.po-steps{grid-template-columns:1fr;}
   .po-cta .po-btn,.po-list-form .po-btn{flex:1 1 auto;}
 }

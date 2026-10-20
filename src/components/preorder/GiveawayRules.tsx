@@ -1,5 +1,5 @@
 import logoSrc from '../../assets/omni-ouro-logo.png'
-import { DEVICE_PRICE, DISCORD_URL, SHIPPING } from '../../lib/preorder'
+import { DISCORD_URL, REGULAR_PRICE, SHIPPING } from '../../lib/preorder'
 import './preorder.css'
 
 /** Official rules for the monthly Eyro Mini giveaway. The draw itself is
@@ -61,7 +61,7 @@ export function GiveawayRules() {
         <h2>6. The prize</h2>
         <p>
           One prize per entry period: one Eyro Mini computer (Intel N95, 16 GB memory, 512 GB SSD).
-          Approximate retail value: ${DEVICE_PRICE}. The prize ships to the winner’s address in the
+          Approximate retail value: ${REGULAR_PRICE}. The prize ships to the winner’s address in the
           United States once Eyro Mini units ship; shipments are expected to begin in {SHIPPING}. The
           prize cannot be transferred or exchanged for cash. Sponsor may substitute a prize of equal or
           greater value. The winner is responsible for any taxes. Sponsor will report the prize’s

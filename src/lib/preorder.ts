@@ -14,10 +14,23 @@ export const MANIFESTO_URL = 'https://www.omni-ouro.com/manifesto'
 export const DISCORD_URL = 'https://discord.gg/2WNKQY8wdc'
 export const GIVEAWAY_START = 'January 2027'
 
-export const DEVICE_PRICE = 699
+export const REGULAR_PRICE = 699
 export const RESERVE_PRICE = 30
 export const SHIPPING = 'January 2027'
 export const REFUND_BY = 'January 31, 2027'
+
+// Pre-order pricing: orders placed before January cost PREORDER_PRICE. At
+// midnight Central on January 1 the site goes back to the regular price by
+// itself, so it never shows an expired deal.
+export const PREORDER_PRICE = 529
+export const DEAL_ENDS = 'December 31, 2026'
+export const DEAL_ACTIVE = Date.now() < Date.parse('2027-01-01T00:00:00-06:00')
+export const DEAL_PERCENT = Math.round((1 - PREORDER_PRICE / REGULAR_PRICE) * 100)
+
+/** What an Eyro Mini costs if you reserve today. */
+export const DEVICE_PRICE = DEAL_ACTIVE ? PREORDER_PRICE : REGULAR_PRICE
+/** Due when it ships: the price less the full reservation, whether or not
+ *  the reservation was paid with the promotion code. */
 export const BALANCE = DEVICE_PRICE - RESERVE_PRICE
 
 // The Stripe promotion code a mailing-list signup is shown on the page. It
