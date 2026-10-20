@@ -92,9 +92,11 @@
 .po-price-was::after{transform:rotate(-22deg);}
 .po-price-off{padding:5px 10px;border-radius:999px;background:#fff;color:#000;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
 .po-cta{display:flex;flex-wrap:wrap;gap:12px;}
-/* The product photo is shot on white, so it sits on its own white card. */
-.po-shot{overflow:hidden;padding:6%;border-radius:16px;background:#f5f5f3;box-shadow:0 24px 90px rgba(0,0,0,.72),0 0 0 1px var(--line-bright);}
-.po-shot img{display:block;width:100%;height:auto;}
+/* The product photo is a cut-out: a black device on the black page, lifted
+   by a soft cool glow (the colour of its ring) so its outline reads. */
+.po-shot{position:relative;padding:4%;}
+.po-shot::before{content:'';position:absolute;inset:8% 4% 0;z-index:0;border-radius:50%;background:radial-gradient(closest-side,rgba(90,120,255,.28),rgba(90,120,255,.08) 60%,transparent);filter:blur(24px);}
+.po-shot img{position:relative;z-index:1;display:block;width:100%;height:auto;filter:drop-shadow(0 30px 40px rgba(0,0,0,.9));}
 
 .po-list{display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;align-items:center;padding:clamp(22px,3vw,32px);border:1px solid var(--line-bright);border-radius:16px;background:var(--panel);}
 .po-list h2{margin-bottom:10px;max-width:none;font-size:clamp(22px,2.6vw,28px);letter-spacing:-.03em;line-height:1.15;}
