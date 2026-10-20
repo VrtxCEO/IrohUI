@@ -6,9 +6,13 @@
  * (OmniOuroWebsite/integrations.js) and links here, so add a new entry to both.
  *
  * kind: 'built-in' comes set up in Eyro; 'adapter' is a bridged app connected
- * through an Eyro adapter. logo: an import from src/assets, or leave it out
+ * through an Eyro adapter. logo: an import from src/assets/integrations
+ * (taken from the company's own site icon), or leave it out
  * for a letter tile. demo: a video URL once it's recorded.
  */
+import agentmailLogo from '../assets/integrations/agentmail.png'
+import agentlineLogo from '../assets/integrations/agentline.png'
+
 export interface Integration {
   slug: string
   name: string
@@ -31,6 +35,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'AgentMail',
     site: 'https://www.agentmail.to/',
     kind: 'built-in',
+    logo: agentmailLogo,
     tagline: 'Email inboxes for AI agents',
     about:
       'AgentMail gives AI agents their own email inboxes, to send, receive and organise mail with threading and a searchable history.',
@@ -45,6 +50,7 @@ export const INTEGRATIONS: Integration[] = [
     name: 'AgentLine',
     site: 'https://agentline.cloud/',
     kind: 'built-in',
+    logo: agentlineLogo,
     tagline: 'Phone numbers for AI agents',
     about:
       'AgentLine gives AI agents real US and Canada phone numbers to make and receive calls, with transcripts and two-way SMS.',
