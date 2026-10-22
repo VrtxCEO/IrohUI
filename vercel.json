@@ -1,8 +1,10 @@
 {
   "redirects": [
-    { "source": "/manifesto", "destination": "https://www.omni-ouro.com/manifesto", "permanent": true }
+    { "source": "/manifesto", "destination": "https://www.omni-ouro.com/manifesto", "permanent": true },
+    { "source": "/app", "destination": "/app/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/app/", "destination": "/app/index.html" },
+    { "source": "/((?!api/|app/).*)", "destination": "/index.html" }
   ]
 }

@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eyro App</title>
+<!-- Installed-app tags. In the shipped PWA these sit in <head>. -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#060608">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eyro">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+/* What the artifact skeleton supplied, needed when hosted on its own. */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<style>
+/* Layout: one phone column. Header (menu, agent, pending, lock) / chat log with inline cards / composer.
+   Drawer slides in from the left: Team, then Eyro's own tabs. Tokens copied from the desktop shell. */
+:root {
+  --accent: #b4c6da;
+  --accent-dim: rgba(180,198,218,0.13);
+  --accent-line: rgba(180,198,218,0.32);
+  --accent-glow: rgba(180,198,218,0.22);
+  --bg: #060608;
+  --surface: #0e0e12;
+  --surface-2: #16161c;
+  --surface-3: #1d1d24;
+  --line: #22222a;
+  --line-lit: #33333d;
+  --text: #e8e8ec;
+  --text-dim: #8a8a95;
+  --text-faint: #55555f;
+  --deny: #d4574e;
+  --pending: #d9a441;
+  --ok: #4e9d7a;
+  --team: #9b8fd0;
+  --r-sm: 5px; --r: 8px; --r-lg: 11px;
+  --font: "Segoe UI", -apple-system, system-ui, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, monospace;
+  --t: 120ms cubic-bezier(0.2,0,0.2,1);
+  color-scheme: dark;
+}
+/* Height follows the visible viewport, so the composer rides above the keyboard. */
+html { height: var(--vvh, 100%); }
+html.kb { padding-bottom: 0 !important; }
+body { height: 100%; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font); overflow: hidden; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input, select, textarea { font: inherit; color: inherit; }
+/* 16px or more, or iPhone zooms the page when a field is tapped. */
+input, select, textarea, .input, #msg { font-size: 16px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#app { height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; max-width: 560px; margin: 0 auto; border-inline: 1px solid var(--line); background: var(--bg); }
+
+/* header */
+.top { display: flex; align-items: center; gap: 8px; padding-block: 10px; padding-left: max(12px, env(safe-area-inset-left,0px)); padding-right: max(12px, env(safe-area-inset-right,0px)); border-bottom: 1px solid var(--line); background: var(--bg); }
+.icon-btn { width: 38px; height: 38px; border-radius: var(--r); display: grid; place-items: center; color: var(--text-dim); position: relative; flex: none; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; padding: 4px 6px; border-radius: var(--r); }
+.who:hover { background: var(--surface-2); }
+.mark { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); flex: none; display: grid; place-items: center; font-size: 12px; color: var(--accent); }
+.who-text { min-width: 0; }
+.who-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who-sub { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
+.dot.idle { background: var(--text-faint); }
+.dot.locked { background: var(--deny); }
+.badge { position: absolute; top: 3px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--pending); color: #1a1408; font-size: 11px; font-weight: 700; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.icon-btn.lock-on { color: var(--deny); }
+
+/* banners */
+.banner { padding: 9px 16px; font-size: 13px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid var(--line); }
+.banner.locked { background: rgba(212,87,78,0.1); color: var(--deny); }
+.banner.idle { background: var(--surface); color: var(--text-dim); }
+.banner.meeting { background: rgba(155,143,208,0.1); color: var(--team); }
+.banner .grow { flex: 1; }
+.banner button { padding: 5px 10px; border-radius: var(--r-sm); border: 1px solid currentColor; font-size: 12px; }
+
+/* chat */
+.log { overflow-y: auto; padding-block: 16px 20px; padding-left: max(16px, env(safe-area-inset-left,0px)); padding-right: max(16px, env(safe-area-inset-right,0px)); display: flex; flex-direction: column; gap: 14px; overscroll-behavior: contain; }
+.msg { max-width: 86%; display: flex; flex-direction: column; gap: 4px; }
+.msg .body { padding: 9px 13px; border-radius: var(--r-lg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.owner { align-self: flex-end; }
+.msg.owner .body { background: var(--surface-3); border-bottom-right-radius: var(--r-sm); }
+.msg.agent { align-self: flex-start; }
+.msg.agent .body { background: transparent; border: 1px solid var(--line); border-bottom-left-radius: var(--r-sm); }
+.msg .from { font-size: 11px; color: var(--text-faint); letter-spacing: 0.04em; text-transform: uppercase; display: flex; gap: 6px; align-items: center; }
+.msg.owner .from { justify-content: flex-end; }
+.tag { font-size: 10px; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--team); color: var(--team); text-transform: uppercase; }
+.tag.owner { border-color: var(--accent-line); color: var(--accent); }
+.sys { align-self: center; font-size: 12px; color: var(--text-faint); text-align: center; max-width: 90%; }
+.thinking { align-self: flex-start; color: var(--text-dim); font-size: 13px; display: flex; gap: 4px; padding: 4px 2px; }
+.thinking i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; }
+.thinking i:nth-child(2) { animation-delay: .2s } .thinking i:nth-child(3) { animation-delay: .4s }
+@keyframes pulse { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .thinking i { animation: none; opacity: .7 } .drawer, .scrim, .sheet { transition: none !important; } }
+
+/* cards */
+.card { align-self: stretch; border: 1px solid var(--line-lit); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
+.card-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pending); }
+.card-head .kind-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.card.done .card-head { color: var(--text-faint); }
+.card-title { padding: 12px 14px 4px; font-weight: 600; }
+.rows { padding: 4px 14px 10px; display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; font-size: 13px; align-items: baseline; }
+.row .k { color: var(--text-dim); }
+.row .v { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.row .v.mono { font-family: var(--mono); font-size: 12px; }
+.field { display: grid; gap: 4px; padding: 0 14px 10px; }
+.field label { font-size: 12px; color: var(--text-dim); }
+.input { width: 100%; background: var(--bg); border: 1px solid var(--line-lit); border-radius: var(--r-sm); padding: 9px 11px; }
+.input:focus { border-color: var(--accent); outline: none; }
+.err { color: var(--deny); font-size: 12px; padding: 0 14px; min-height: 0; }
+.err:empty { display: none; }
+.actions { display: flex; gap: 8px; padding: 10px 14px 14px; flex-wrap: wrap; }
+.btn { flex: 1; min-width: 96px; padding: 10px 12px; border-radius: var(--r); border: 1px solid var(--line-lit); background: var(--surface-2); font-weight: 600; font-size: 14px; }
+.btn:hover { border-color: var(--text-faint); }
+.btn.primary { background: var(--accent); color: #0b0d10; border-color: var(--accent); }
+.btn.danger { color: var(--deny); }
+.btn:disabled { opacity: .45; cursor: default; }
+.result { padding: 10px 14px 14px; font-size: 13px; color: var(--text-dim); }
+.result.ok { color: var(--ok); } .result.no { color: var(--text-dim); }
+.diff { margin: 2px 14px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font-family: var(--mono); font-size: 12px; overflow-x: auto; max-height: 240px; }
+.diff div { padding: 1px 10px; white-space: pre; }
+.diff .add { background: rgba(78,157,122,0.12); color: #8fd1b2; }
+.diff .del { background: rgba(212,87,78,0.12); color: #f0a49e; }
+.diff .hunk { color: var(--text-faint); }
+.note { font-size: 12px; color: var(--text-dim); padding: 0 14px 8px; }
+
+/* composer */
+.composer { border-top: 1px solid var(--line); padding-block: 10px; padding-left: max(12px, env(safe-area-inset-left,0px)); padding-right: max(12px, env(safe-area-inset-right,0px)); padding-bottom: max(10px, env(safe-area-inset-bottom,0px)); background: var(--bg); }
+.compose-row { display: flex; gap: 8px; align-items: flex-end; background: var(--surface); border: 1px solid var(--line-lit); border-radius: 22px; padding: 5px 5px 5px 16px; }
+.compose-row:focus-within { border-color: var(--accent-line); }
+#msg { flex: 1; min-width: 0; background: none; border: 0; resize: none; padding: 7px 0; max-height: 120px; line-height: 1.4; }
+#msg:focus { outline: none; }
+.send { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #0b0d10; display: grid; place-items: center; flex: none; }
+.send svg { width: 18px; height: 18px; fill: currentColor; }
+.send:disabled { background: var(--surface-3); color: var(--text-faint); }
+html.kb .composer { padding-bottom: 10px; }
+.banner.offline { background: rgba(217,164,65,0.08); color: var(--pending); }
+
+/* install screen: shown in a normal browser tab, never in the installed app */
+#install { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; padding-block: max(32px, env(safe-area-inset-top,0px)) max(32px, env(safe-area-inset-bottom,0px)); padding-left: max(20px, env(safe-area-inset-left,0px)); padding-right: max(20px, env(safe-area-inset-right,0px)); }
+.inst { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+.inst-logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 0 28px var(--accent-glow); }
+.inst h1 { font-size: 26px; font-weight: 600; margin: 0; text-wrap: balance; }
+.inst p { margin: 0; color: var(--text-dim); }
+.inst-card { border: 1px solid var(--line-lit); border-radius: var(--r-lg); background: var(--surface); padding: 16px; display: grid; gap: 12px; }
+.inst-card.mine { border-color: var(--accent-line); }
+.inst-card h2 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin: 0; font-weight: 600; }
+.inst-card ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.inst-card li::marker { color: var(--accent); }
+.inst-card b { color: var(--text); font-weight: 600; }
+.inst-why { font-size: 13px; color: var(--text-dim); }
+.inst-preview { color: var(--text-faint); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; align-self: center; padding: 8px; }
+.compose-hint { font-size: 11px; color: var(--text-faint); padding: 6px 4px 0; }
+
+/* drawer */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.55); opacity: 0; pointer-events: none; transition: opacity var(--t); z-index: 20; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; width: min(320px, 86vw); background: var(--surface); border-right: 1px solid var(--line); transform: translateX(-102%); transition: transform 180ms cubic-bezier(0.2,0,0.2,1); z-index: 21; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top,0px); padding-bottom: env(safe-area-inset-bottom,0px); padding-left: env(safe-area-inset-left,0px); }
+.drawer.open { transform: none; }
+.drawer-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+.drawer-head .wm { font-size: 18px; letter-spacing: 0.02em; font-weight: 300; }
+.drawer-head .wm b { font-weight: 600; }
+.drawer-list { overflow-y: auto; padding: 8px; flex: 1; }
+.dsec { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); padding: 14px 10px 6px; }
+.ditem { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: var(--r); text-align: left; font-size: 15px; }
+.ditem:hover, .ditem.on { background: var(--surface-2); }
+.ditem svg { width: 18px; height: 18px; stroke: var(--text-dim); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ditem .count { margin-left: auto; font-size: 12px; color: var(--pending); font-variant-numeric: tabular-nums; }
+.ditem .muted { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+.drawer-foot { padding: 12px 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-faint); }
+
+/* full-screen sheet for tabs */
+.sheet { position: fixed; inset: 0; z-index: 15; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 180ms cubic-bezier(0.2,0,0.2,1); max-width: 560px; margin: 0 auto; border-inline: 1px solid var(--line); padding-top: env(safe-area-inset-top,0px); }
+.sheet.open { transform: none; }
+.sheet-head { display: flex; align-items: center; gap: 6px; padding-block: 10px; padding-left: max(8px, env(safe-area-inset-left,0px)); padding-right: max(12px, env(safe-area-inset-right,0px)); border-bottom: 1px solid var(--line); }
+.sheet-title { font-weight: 600; font-size: 16px; flex: 1; }
+.sheet-sub { font-size: 12px; color: var(--text-dim); }
+.sheet-body { overflow-y: auto; flex: 1; padding-block: 12px 32px; padding-left: max(16px, env(safe-area-inset-left,0px)); padding-right: max(16px, env(safe-area-inset-right,0px)); padding-bottom: max(32px, env(safe-area-inset-bottom,0px)); display: flex; flex-direction: column; gap: 18px; }
+
+/* lists inside tabs */
+.sec-title { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
+.list { border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
+.li { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); width: 100%; text-align: left; }
+.li:first-child { border-top: 0; }
+button.li:hover { background: var(--surface-2); }
+.li-main { flex: 1; min-width: 0; }
+.li-name { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li-desc { font-size: 12px; color: var(--text-dim); overflow-wrap: anywhere; }
+.li-right { font-size: 13px; color: var(--text-dim); font-variant-numeric: tabular-nums; text-align: right; flex: none; }
+.pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line-lit); color: var(--text-dim); white-space: nowrap; }
+.pill.ok { color: var(--ok); border-color: rgba(78,157,122,0.4); }
+.pill.pend { color: var(--pending); border-color: rgba(217,164,65,0.4); }
+.pill.no { color: var(--deny); border-color: rgba(212,87,78,0.4); }
+.pill.risk { color: var(--pending); border-color: rgba(217,164,65,0.4); }
+.empty { padding: 18px 14px; font-size: 13px; color: var(--text-dim); text-align: center; }
+.viewonly { font-size: 12px; color: var(--text-dim); border: 1px dashed var(--line-lit); border-radius: var(--r); padding: 9px 12px; }
+
+.meter { height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+.meter > i { display: block; height: 100%; background: var(--accent); }
+.stat { padding: 14px; display: grid; gap: 8px; }
+.stat-top { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
+.stat-top b { font-size: 20px; font-weight: 600; }
+.stat-top span { font-size: 12px; color: var(--text-dim); }
+
+.toggle { width: 42px; height: 24px; border-radius: 12px; background: var(--surface-3); border: 1px solid var(--line-lit); position: relative; flex: none; }
+.toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--text-dim); transition: transform var(--t); }
+.toggle[aria-checked="true"] { background: var(--accent-dim); border-color: var(--accent-line); }
+.toggle[aria-checked="true"]::after { transform: translateX(18px); background: var(--accent); }
+
+.agent-card { display: flex; gap: 12px; align-items: center; padding: 14px; border-top: 1px solid var(--line); width: 100%; text-align: left; }
+.agent-card:first-child { border-top: 0; }
+.agent-card:hover { background: var(--surface-2); }
+.check { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--line-lit); display: grid; place-items: center; flex: none; }
+.check.on { background: var(--accent); border-color: var(--accent); }
+.check.on::after { content: ""; width: 10px; height: 5px; border: 2px solid #0b0d10; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom,0px)); background: var(--surface-3); border: 1px solid var(--line-lit); padding: 9px 16px; border-radius: 20px; font-size: 13px; z-index: 40; max-width: 90vw; }
+.proto { font-size: 11px; color: var(--text-faint); text-align: center; padding: 4px 0 0; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="top">
+    <button class="icon-btn" id="menu-btn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span class="badge" id="team-badge" hidden></span>
+    </button>
+    <button class="who" id="who" aria-label="Switch agent">
+      <div class="mark" id="who-mark">e</div>
+      <div class="who-text">
+        <div class="who-name" id="who-name">Atlas</div>
+        <div class="who-sub"><span class="dot" id="who-dot"></span><span id="who-sub">Home N95 · connected</span></div>
+      </div>
+    </button>
+    <button class="icon-btn" id="pending-btn" aria-label="Pending for this agent">
+      <svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      <span class="badge" id="pending-badge" hidden></span>
+    </button>
+    <button class="icon-btn" id="lock-btn" aria-label="Lock Eyro">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    </button>
+  </header>
+  <div id="banner"></div>
+  <main class="log" id="log" aria-live="polite"></main>
+  <footer class="composer">
+    <div class="compose-row">
+      <textarea id="msg" rows="1" placeholder="Message Atlas" aria-label="Message"></textarea>
+      <button class="send" id="send" aria-label="Send" disabled><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2-6z"/></svg></button>
+    </div>
+    <div class="proto">Prototype · example agents and data</div>
+  </footer>
+</div>
+
+<div id="install" hidden>
+  <div class="inst">
+    <img class="inst-logo" src="icons/icon-192.png" alt="">
+    <div style="display:grid;gap:8px">
+      <h1>Add Eyro to your phone</h1>
+      <p>Eyro runs as an app on your home screen, not in a browser tab. Install it, then pair it with your Eyro.</p>
+    </div>
+    <div class="inst-card" id="inst-android">
+      <h2>Android</h2>
+      <button class="btn primary" id="inst-btn" hidden>Install Eyro</button>
+      <ol id="inst-android-steps">
+        <li>Open the browser menu <b>&#8942;</b></li>
+        <li>Tap <b>Install app</b> or <b>Add to Home screen</b></li>
+        <li>Open <b>Eyro</b> from your home screen</li>
+      </ol>
+    </div>
+    <div class="inst-card" id="inst-ios">
+      <h2>iPhone</h2>
+      <ol>
+        <li>Open this page in <b>Safari</b></li>
+        <li>Tap <b>Share</b> at the bottom of the screen</li>
+        <li>Tap <b>Add to Home Screen</b>, then <b>Add</b></li>
+        <li>Open <b>Eyro</b> from your home screen</li>
+      </ol>
+    </div>
+    <div class="inst-why">Installed, Eyro opens full screen and can notify you when an agent needs you. Notifications on iPhone only work once it's on your home screen.</div>
+    <button class="inst-preview" id="inst-preview">Preview in the browser (prototype only)</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<nav class="drawer" id="drawer" aria-label="Menu">
+  <div class="drawer-head"><div class="mark">e</div><div class="wm"><b>eyro</b></div></div>
+  <div class="drawer-list" id="drawer-list"></div>
+  <div class="drawer-foot" id="drawer-foot"></div>
+</nav>
+
+<section class="sheet" id="sheet" aria-modal="true" role="dialog">
+  <div class="sheet-head">
+    <button class="icon-btn" id="sheet-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div><div class="sheet-title" id="sheet-title"></div><div class="sheet-sub" id="sheet-sub"></div></div>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</section>
+
+<script>
+/* ======================================================================
+ * Connecting to a real Eyro. Two slots are empty until they're built:
+ *
+ * Pairing: the Eyro App's owner pairing, one entry per paired Eyro.
+ *   TOTP pairing fills it. Each entry is {id, label?, ...} plus whatever
+ *   credential the transport needs (on the Rust API that's the Operator
+ *   binding's peer id and connection token). There is no interim pairing.
+ *
+ * Transport: how a request reaches one paired Eyro. The relay fills it.
+ *   request(pairing, method, path, body) -> {status, body}
+ *   chat(pairing, path, onFrame, onClose) -> {send(frame), close()}
+ *   notifications(pairing, onFrame) -> {close()}   (the Operator's /ws/bridge feed)
+ *
+ * Until both exist the app runs on the example data below.
+ * ====================================================================== */
+const Pairing = {
+  list() { return []; },
+};
+const Transport = { request: null, chat: null, notifications: null };
+const LIVE = Pairing.list().length > 0 && !!(Transport.request && Transport.chat);
+
+/* ======================================================================
+ * EyroAPI: everything the screens ask of Eyro. Each call names the Eyro
+ * Rust route it uses, and translates that route's JSON into the shapes the
+ * screens already draw, so the screens don't change between example data
+ * and a real Eyro.
+ * ====================================================================== */
+const EyroAPI = {
+  // Loads what an instance shows: its name, lock state and the cards waiting on the owner.
+  async load(inst) { return LIVE ? Real.load(inst) : null; },
+  // ws /ws/{channel_id}: send {type:"message", text}; the agent's {type:"turn", role:"agent"} is the reply.
+  async send(inst, text) { return LIVE ? Real.send(inst, text) : Mock.reply(inst, text); },
+  async pending(inst) { return inst.cards.filter(c => !c.resolved); },
+  // POST /api/pending-confirmations/{id}/resolve  {approve, proof?}
+  // POST /api/pending-confirmations/{id}/card     {proof, amount_minor?, band_bps?}
+  async resolve(inst, card, approve, proof, cardEdit) { return LIVE ? Real.resolve(inst, card, approve, proof, cardEdit) : Mock.resolve(inst, card, approve, proof, cardEdit); },
+  // POST /api/copies/{id}/commit | /discard
+  async copy(inst, card, what) { return LIVE ? Real.copy(inst, card, what) : { ok: true }; },
+  // POST /api/intake/first-contacts/{id}  {choice:"add", name} | {choice:"never"} | {choice:"dismiss"}
+  async firstContact(inst, card, choice) { return LIVE ? Real.firstContact(inst, card, choice) : { ok: true }; },
+  // POST /api/settings/lock {on, proof?}  (leaving Lock needs what the owner logs in with)
+  async lock(inst, on, proof) { return LIVE ? Real.lock(inst, on, proof) : Mock.lock(inst, on, proof); },
+  // Tab reads: each goes to the CURRENT instance over its own pairing.
+  async tab(inst, kind) {
+    if (LIVE) return Real.tab(inst, kind);
+    await new Promise(r => setTimeout(r, 150)); return structuredClone(TAB_DATA[inst.id][kind]);
+  },
+  // POST /api/keep/files {name, content: base64}
+  async keepSend(inst, name) { return LIVE ? Real.keepSend(inst, name) : (TAB_DATA[inst.id].keep.push([name, "Sealed on arrival"]), { ok: true }); },
+  // Wake after a power-return restart: not an Eyro route yet.
+  async wake(inst) { if (LIVE) return { ok: false }; inst.state = "on"; return { ok: true }; },
+  // Team Meeting: no meeting route. The app sends each message to every member's
+  // team chat thread for this meeting; agents' replies arrive on their own and are
+  // added to the meeting as they come. Returns any replies it has right away.
+  async meeting(meeting, members, text) {
+    Meetings.open(meeting, members);
+    if (LIVE && TeamLabel.frame) return Real.meeting(meeting, members, text);
+    return members.map((m, k) => ({ who: m.id, text: k === 0 ? ex("I can take the invoices. I'll need the client list from whoever holds it.") : ex("I hold the client list. Sharing it needs the owner's OK on my side.") }));
+  },
+};
+
+/* ---------------- Team Meetings ----------------
+ * Each meeting is its own team chat thread: a new meeting, or one with a
+ * different set of agents, starts a different thread. The app keeps the list
+ * of meetings; each agent keeps its own team chat thread per meeting.
+ *
+ * TeamLabel: how the app marks a message as coming from another agent in a
+ * Team Meeting, so Eyro handles it as "team member", without owner authority.
+ * Empty until Eyro accepts the label; until then meetings run on example data.
+ *   frame(fromAgent, text) -> the chat frame to send */
+const TeamLabel = { frame: null };
+const Meetings = {
+  key: "eyro-meetings",
+  list() { try { return JSON.parse(localStorage.getItem(this.key)) || []; } catch { return []; } },
+  open(meeting, members) {
+    if (meeting.id) return;
+    meeting.id = "team-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const all = this.list();
+    all.unshift({ id: meeting.id, members: members.map((m) => m.id), started_at: new Date().toISOString() });
+    try { localStorage.setItem(this.key, JSON.stringify(all.slice(0, 50))); } catch { /* storage blocked: the meeting still runs */ }
+  },
+};
+
+/* ---------------- the real Eyro: routes and translation ---------------- */
+const CHAT_THREAD = "eyro-app";
+
+async function call(inst, method, path, body) {
+  const r = await Transport.request(inst.pairing, method, path, body);
+  if (r.status >= 200 && r.status < 300) return r.body;
+  const msg = (r.body && (r.body.error || r.body.detail)) || `Eyro answered ${r.status}.`;
+  throw Object.assign(new Error(msg), { status: r.status });
+}
+const enc = encodeURIComponent;
+const titleCase = (s) => String(s || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const baseName = (p) => String(p || "").split(/[\\/]/).filter(Boolean).pop() || p;
+const fmtMoney = (m) => m ? money(m.minor_units, m.currency) : "None";
+const fmtWhen = (s) => { const d = new Date(s); return isNaN(d) ? "" : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); };
+
+function callerName(c) {
+  if (!c) return "Eyro";
+  if (c.kind === "smith") return titleCase(c.smith_id);
+  if (c.kind === "open_lane") return "Open Lane";
+  if (c.kind === "owner") return "You";
+  if (c.kind === "decision") return callerName(c.on_behalf_of);
+  return titleCase(c.kind);
+}
+const REASON = {
+  risky: "Marked risky", authority_write: "Changes Eyro's rules", payment_card: "Payment",
+  outside_tolerance: "Outside the allowed range", over_per_call_max: "Over the per-payment limit",
+  over_daily_budget: "Over the daily budget", over_weekly_budget: "Over the weekly budget", over_monthly_budget: "Over the monthly budget",
+};
+function reasonText(r) {
+  if (!r) return null;
+  if (r.reason === "new_contact") return `New contact: ${r.name}`;
+  if (r.reason === "not_in_freedom_scope") return `Above freedom level ${r.level}`;
+  return REASON[r.reason] || titleCase(r.reason);
+}
+// GET /api/pending-confirmations Approval -> a payment or approval card.
+function cardFromApproval(a) {
+  const base = { id: a.approval_id, confirmation_id: a.approval_id, summary: a.summary, action_type: a.tool_id,
+                 requested_by: callerName(a.caller), required_methods: a.required || [] };
+  if (a.card) return { ...base, type: "payment", card: { recipient_ref: a.card.recipient_ref, amount: a.card.amount, band_bps: a.card.band_bps } };
+  const details = { Why: reasonText(a.reason) };
+  for (const [k, v] of Object.entries(a.args || {}).slice(0, 4)) if (v != null && typeof v !== "object") details[titleCase(k)] = String(v);
+  return { ...base, type: "approval", details };
+}
+// GET /api/copies Crossing (proposed, with a patch) -> a diff card. File headers are dropped.
+function cardFromCopy(c) {
+  const patch = c.patch.split("\n").filter((l) => l && !l.startsWith("+++") && !l.startsWith("---") && !l.startsWith("diff "));
+  return { id: c.id, type: "diff", summary: `Changes to ${baseName(c.origin)}`, file: c.origin, patch };
+}
+// GET /api/intake/first-contacts (waiting) -> a contact card.
+function cardFromContact(f) {
+  return { id: f.id, type: "contact", sender: f.sender, channel: f.channel, verified: f.verified, preview: f.first_message };
+}
+function proofError(e, what = "PIN") {
+  if (e.status === 409 && /did not verify/.test(e.message)) return `That ${what} doesn't match. Try again.`;
+  if (e.status === 409 && /this needs \[/.test(e.message)) return "This needs more than your PIN. Approve it at your Eyro.";
+  return e.message;
+}
+
+const Real = {
+  async load(inst) {
+    // GET /api/local/config answers even while Eyro is locked.
+    const cfg = await call(inst, "GET", "/api/local/config");
+    inst.agent = cfg.agent_name || inst.agent;
+    inst.locked = cfg.presence && cfg.presence.mode === "lock";
+    inst.state = "on";
+    if (inst.locked) { inst.cards = []; return; }
+    const [approvals, copies, contacts] = await Promise.all([
+      call(inst, "GET", "/api/pending-confirmations").catch(() => []),
+      call(inst, "GET", "/api/copies").catch(() => []),
+      call(inst, "GET", "/api/intake/first-contacts").catch(() => []),
+    ]);
+    inst.cards = [
+      ...approvals.map(cardFromApproval),
+      ...copies.filter((c) => c.status === "proposed" && c.patch).map(cardFromCopy),
+      ...contacts.filter((f) => f.status === "waiting").map(cardFromContact),
+    ];
+    if (!inst.feed && Transport.notifications) {
+      inst.feed = Transport.notifications(inst.pairing, (f) => {
+        if (f.type !== "notification") return;
+        inst.thread.push({ who: "sys", text: [f.title, f.body].filter(Boolean).join(". ") });
+        Real.load(inst).then(renderAll, renderAll);
+      });
+    }
+  },
+
+  // A meeting's team chat thread on one member agent. Each agent reply is added
+  // to the meeting and passed to the other members labeled team member.
+  team(inst, meeting, members) {
+    inst.team = inst.team || {};
+    if (inst.team[meeting.id]) return inst.team[meeting.id];
+    const sock = Transport.chat(inst.pairing, `/ws/${meeting.id}`, (f) => {
+      if (!((f.type === "turn" && f.role === "agent") || f.type === "said") || !f.text) return;
+      meeting.log.push({ who: inst.id, text: f.text });
+      if (meeting.active) renderLog();
+      for (const other of members) if (other !== inst) Real.team(other, meeting, members).send(TeamLabel.frame(inst.agent, f.text));
+    }, () => { delete inst.team[meeting.id]; });
+    inst.team[meeting.id] = sock;
+    return sock;
+  },
+  // The owner's message goes to every member's team thread, with owner authority.
+  // Each agent chooses whether to answer; answers arrive through team().
+  async meeting(meeting, members, text) {
+    for (const m of members) Real.team(m, meeting, members).send({ type: "message", text });
+    return [];
+  },
+
+  chat(inst) {
+    if (inst.chat) return inst.chat;
+    const waiters = [];
+    const show = (m) => { inst.thread.push(m); if (inst === current) renderLog(); };
+    const answer = (text) => { const w = waiters.shift(); if (w) w({ text }); else show({ who: "agent", text }); };
+    const sock = Transport.chat(inst.pairing, `/ws/${CHAT_THREAD}`, (f) => {
+      if (f.type === "turn" && f.role === "agent") answer(f.text);
+      else if (f.type === "said") answer(f.text);
+      else if (f.type === "choose") show({ who: "sys", text: `${f.prompt} Choose at your Eyro: ${f.options.map((o) => o.description).join(" · ")}` });
+      else if (f.type === "write") show({ who: "sys", text: `${f.prompt} Answer at your Eyro.` });
+      else if (f.type === "notification") show({ who: "sys", text: [f.title, f.body].filter(Boolean).join(". ") });
+      else if (f.type === "error") answer(f.reason);
+    }, () => { inst.chat = null; });
+    inst.chat = { send: (frame) => sock.send(frame), waiters };
+    return inst.chat;
+  },
+  send(inst, text) {
+    const c = Real.chat(inst);
+    return new Promise((resolve) => {
+      const w = (r) => { clearTimeout(t); resolve(r); };
+      // A long job answers later: the reply then lands in the thread on its own.
+      const t = setTimeout(() => { c.waiters.splice(c.waiters.indexOf(w), 1); resolve({ text: "Still working on it. The answer will show up here." }); }, 120000);
+      c.waiters.push(w);
+      c.send({ type: "message", text });
+    });
+  },
+
+  async resolve(inst, card, approve, proof, cardEdit) {
+    const id = enc(card.confirmation_id || card.id);
+    try {
+      if (approve && cardEdit) await call(inst, "POST", `/api/pending-confirmations/${id}/card`, { proof, amount_minor: cardEdit.amount_minor, band_bps: cardEdit.band_bps });
+      else await call(inst, "POST", `/api/pending-confirmations/${id}/resolve`, approve ? { approve: true, proof } : { approve: false });
+      return { ok: true };
+    } catch (e) { return { ok: false, error: proofError(e) }; }
+  },
+  async copy(inst, card, what) {
+    try { await call(inst, "POST", `/api/copies/${enc(card.id)}/${what === "commit" ? "commit" : "discard"}`); return { ok: true }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  },
+  async firstContact(inst, card, choice) {
+    try { await call(inst, "POST", `/api/intake/first-contacts/${enc(card.id)}`, choice); return { ok: true }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  },
+  async lock(inst, on, proof) {
+    try {
+      const presence = await call(inst, "POST", "/api/settings/lock", on ? { on: true } : { on: false, proof });
+      inst.locked = presence.mode === "lock";
+      if (!inst.locked) Real.load(inst).then(renderAll, renderAll);
+      return { ok: true };
+    } catch (e) {
+      if (e.status === 403) return { ok: false, error: "Unlocking needs what you log in with. Unlock it at your Eyro." };
+      return { ok: false, error: proofError(e) };
+    }
+  },
+  async keepSend(inst, name) {
+    // The Keep screen calls this from its file input's change handler, while the file is still selected.
+    const f = document.getElementById("keep-file")?.files?.[0];
+    if (!f) return { ok: false };
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    try { await call(inst, "POST", "/api/keep/files", { name, content: btoa(bin) }); return { ok: true }; }
+    catch (e) { toast(e.message); return { ok: false, error: e.message }; }
+  },
+
+  // Each tab: the Eyro route(s) it reads, translated to the rows its screen draws.
+  async tab(inst, kind) { return TABS_REAL[kind](inst); },
+};
+
+const TABS_REAL = {
+  // GET /api/fs/list: the owner's first root, folders first.
+  async files(inst) {
+    const top = await call(inst, "GET", "/api/fs/list");
+    const root = (top.roots || []).find((r) => r.profile === "owner") || (top.roots || [])[0];
+    if (!root) return [];
+    const d = await call(inst, "GET", `/api/fs/list?path=${enc(root.path)}`);
+    return (d.entries || []).slice().sort((a, b) => (b.is_dir - a.is_dir) || a.name.localeCompare(b.name)).map((e) => [
+      e.name,
+      e.unreadable ? "Can't be read" : e.is_dir ? "Folder" : (e.modified_at ? `Changed ${fmtWhen(e.modified_at)}` : ""),
+      e.is_dir ? "Folder" : (e.ext || "").replace(".", "").toUpperCase() || "File",
+    ]);
+  },
+  // GET /api/foundry/graph: the most connected pages.
+  async foundry(inst) {
+    const g = await call(inst, "GET", "/api/foundry/graph");
+    return (g.nodes || []).slice().sort((a, b) => b.degree - a.degree).slice(0, 20)
+      .map((n) => [n.title, n.summary || titleCase(n.page_type)]);
+  },
+  // GET /api/workflow: smiths, the verb with the most tools, and payment limits.
+  async workflow(inst) {
+    const w = await call(inst, "GET", "/api/workflow");
+    const verb = (w.verbs || []).slice().sort((a, b) => b.tools.length - a.tools.length)[0] || { name: "", tools: [] };
+    const fin = (w.settings && w.settings.finance) || {};
+    const limits = [["Per payment", fin.per_call_max], ["Daily", fin.daily_budget], ["Weekly", fin.weekly_budget], ["Monthly", fin.monthly_budget]]
+      .filter(([, m]) => m).map(([n, m]) => [n, fmtMoney(m)]);
+    return {
+      smiths: (w.smiths || []).map((s) => [s.display_name, [s.core === "no" ? "Owner-made" : titleCase(s.core), (s.verbs || []).join(", ")].filter(Boolean).join(" · "), s.enabled ? "On" : "Off"]),
+      verb: titleCase(verb.name),
+      tools: verb.tools.map((t) => [t.tool_id, [`Level ${t.level_default}`, (t.allowed_smiths || []).map(titleCase).join(", ")].filter(Boolean).join(" · "), !!t.risky_default, !t.disabled]),
+      limits,
+    };
+  },
+  // GET /api/mint/spent + GET /api/workflow (the monthly budget).
+  async mint(inst) {
+    const [s, w] = await Promise.all([call(inst, "GET", "/api/mint/spent"), call(inst, "GET", "/api/workflow").catch(() => ({}))]);
+    const cur = Object.keys(s.overall || {})[0] || "USD";
+    const spent = ((s.overall || {})[cur] || {}).month || 0;
+    const budget = w.settings && w.settings.finance && w.settings.finance.monthly_budget;
+    return {
+      spent: money(spent, cur),
+      budget: budget ? fmtMoney(budget) : "No budget set",
+      pct: budget && budget.minor_units ? Math.min(100, Math.round(spent / budget.minor_units * 100)) : 0,
+      recent: (s.recent || []).slice(0, 10).map((r) => [r.smith ? titleCase(r.smith) : "Payment", fmtWhen(r.at), fmtMoney(r.amount)]),
+    };
+  },
+  // GET /api/rolodex/cards + GET /api/people/threads (unknown senders).
+  async rolodex(inst) {
+    const [cards, people] = await Promise.all([call(inst, "GET", "/api/rolodex/cards"), call(inst, "GET", "/api/people/threads").catch(() => ({ threads: [] }))]);
+    return {
+      known: cards.map((c) => [c.name, (c.emails[0] && c.emails[0].value) || (c.phones[0] && c.phones[0].value) || ""]),
+      unknown: (people.threads || []).filter((t) => t.tag === "unknown")
+        .map((t) => [t.label, t.prompt && t.prompt.status === "waiting" ? "Waiting on your save prompt" : "Read and notified only"]),
+    };
+  },
+  // GET /api/settings/identity
+  async identity(inst) {
+    const i = await call(inst, "GET", "/api/settings/identity");
+    return { email: i.email || "Not set", phone: i.phone || "Not set" };
+  },
+  // GET /api/bridge/peers lists paired apps; this phone is the owner's pairing, shown first.
+  async bridge(inst) {
+    const p = await call(inst, "GET", "/api/bridge/peers");
+    return [["Eyro App", "Owner · this phone", "Owner"],
+      ...(p.peers || []).map((b) => [b.display_name, b.agent_access ? "Agent access on" : "Agent access off", b.active ? "Paired" : "Paired · offline"])];
+  },
+  // GET /api/keep/files (423 while the Keep is locked: then only the count from /api/keep/status).
+  async keep(inst) {
+    try { return (await call(inst, "GET", "/api/keep/files")).map((f) => [f.name, `Added ${fmtWhen(f.added_at)}`]); }
+    catch (e) {
+      if (e.status !== 423) throw e;
+      const s = await call(inst, "GET", "/api/keep/status");
+      return s.file_count ? [[`${s.file_count} sealed file${s.file_count === 1 ? "" : "s"}`, "Names show once the Keep is open"]] : [];
+    }
+  },
+  // GET /api/background (work in progress) + GET /api/commitments (scheduled).
+  async background(inst) {
+    const [b, jobs] = await Promise.all([call(inst, "GET", "/api/background"), call(inst, "GET", "/api/commitments").catch(() => [])]);
+    const STATUS = { running: ["Running", ""], waiting: ["Waiting", "pend"], paused: ["Paused", ""], completed: ["Done", "ok"], failed: ["Failed", "no"] };
+    const work = (b.chains || []).map((c) => {
+      const [label, cls] = STATUS[c.work_status] || [titleCase(c.work_status), ""];
+      return [(c.steps[0] && c.steps[0].goal) || c.work_id, `${c.completed_steps} of ${c.step_count} steps`, label, cls];
+    });
+    const when = (j) => j.condition.kind === "when"
+      ? (j.condition.repeat ? `When · every ${j.condition.repeat.every}` : `When · ${fmtWhen(j.condition.at)}`)
+      : `Whether check · every ${Math.max(1, Math.round(j.condition.every_seconds / 3600))} h`;
+    const sched = jobs.filter((j) => j.status === "active" || j.status === "paused")
+      .map((j) => [j.goal, when(j), j.status === "paused" ? "Paused" : "Scheduled", ""]);
+    return [...work, ...sched];
+  },
+  // GET /api/audit/stream?limit=200, newest first.
+  async activity(inst) {
+    const a = await call(inst, "GET", "/api/audit/stream?limit=200");
+    const label = (t) => /refus|denied|blocked/.test(t) ? ["Refused", "no"] : /approval|confirm|ask/.test(t) ? ["Asked", "pend"] : /executed|done|ran/.test(t) ? ["Ran", "ok"] : [titleCase(t.split(".").pop()), ""];
+    return (a.records || []).slice().reverse().slice(0, 100).map((r) => {
+      const [l, cls] = label(r.event_type);
+      return [[r.event_type, r.tool_id].filter(Boolean).join(" "), fmtWhen(r.ts), l, cls];
+    });
+  },
+  // GET /api/settings/freedom + /api/settings/autonomous-mode + GET /api/models (current model).
+  async settings(inst) {
+    const [f, a, m] = await Promise.all([call(inst, "GET", "/api/settings/freedom"), call(inst, "GET", "/api/settings/autonomous-mode"), call(inst, "GET", "/api/models")]);
+    return {
+      level: f.current_level == null ? "Not set" : `Level ${f.current_level}`,
+      autonomous: a.enabled ? "On" : "Off",
+      model: m.current ? `${m.current.model} · ${titleCase(m.current.provider)}` : "Not set",
+    };
+  },
+};
+
+/* ---------------- example data ---------------- */
+const PIN = "1234";
+const ex = (s) => s; // marks example content
+const EXAMPLE_INSTANCES = [
+  {
+    id: "atlas", agent: "Atlas", device: "Home N95", state: "on", locked: false,
+    thread: [
+      { who: "owner", text: ex("Pay the electric bill when it posts, and keep the Q3 deck notes tidy.") },
+      { who: "agent", text: ex("The bill posted this morning. It needs your OK because payments are marked risky. I also cleaned up the deck notes on a copy, so there's a diff for you.") },
+    ],
+    cards: [
+      { id: "c1", type: "payment", confirmation_id: "conf_7f21", summary: "Pay Huntsville Utilities", action_type: "payments.send", requested_by: "Bank Smith",
+        card: { recipient_ref: "Huntsville Utilities · acct ending 0418", amount: { currency: "USD", minor_units: 14237 }, band_bps: 300 }, required_methods: ["pin"] },
+      { id: "c2", type: "diff", summary: "Changes to Q3 deck notes", file: "Documents/Q3 deck notes.md",
+        patch: ["@@ -3,6 +3,7 @@", " ## Revenue", "-Revenue grew alot in Q3", "+Revenue grew 18% in Q3, led by fleet seats.", " ", " ## Risks", "+- Reviewer dates not set yet"] },
+    ],
+  },
+  {
+    id: "ledger", agent: "Ledger", device: "Office N95", state: "on", locked: false,
+    thread: [
+      { who: "agent", text: ex("A new sender wrote in on email. I read it and haven't answered. Do you want them in your Rolodex?") },
+    ],
+    cards: [
+      { id: "c3", type: "contact", sender: "dana@rivercitycpa.com", channel: "email", verified: true, preview: ex("Hi, following up on the 1099s for your contractors...") },
+      { id: "c4", type: "approval", confirmation_id: "conf_91aa", summary: "Send invoice INV-0042 to Halsey Dental", action_type: "email.send", requested_by: "Comm Smith",
+        details: { To: "billing@halseydental.com", Attachment: "INV-0042.pdf", Amount: "$2,400.00" }, required_methods: ["pin"] },
+    ],
+  },
+  {
+    id: "scout", agent: "Scout", device: "Garage N95", state: "idle", locked: false,
+    thread: [ { who: "sys", text: "Power came back at 4:12 AM. Scout restarted and is idle until you wake it." } ],
+    cards: [],
+  },
+];
+// One instance per paired Eyro; the name, lock state and cards come from EyroAPI.load.
+// Eyro has no device name, so the pairing's label (or "Eyro") stands in.
+const instances = LIVE
+  ? Pairing.list().map((p) => ({ id: p.id, agent: p.label || "Eyro", device: p.label || "Eyro", state: "on", locked: false, thread: [], cards: [], pairing: p }))
+  : EXAMPLE_INSTANCES;
+const meeting = { active: false, members: [], log: [] };
+
+/* ---------------- per-instance tab data ----------------
+ * What each Eyro's own API would answer. Every agent has its own;
+ * switching agents switches which Eyro the app reads from. */
+const TAB_DATA = {
+  atlas: {
+    files: [["Q3 deck notes.md", "Edited by agent on a copy", "Level 2"], ["Invoices", "Folder · 14 items", "Level 2"], ["Taxes 2026", "Folder · 6 items", "Level 3"]],
+    foundry: [["Owner preferences", "Updated by Memory Smith · today"], ["Household bills", "8 entries · yesterday"], ["Q3 planning", "Notes · Oct 9"]],
+    workflow: { smiths: [["Memory Smith", "Native · write to Foundry", "3 tools"], ["Bank Smith", "Example · pay, check balance", "2 tools"], ["Comm Smith", "Example · email, text, call", "5 tools"]],
+      verb: "Pay", tools: [["payments.send", "Level 2 · Bank Smith", true, true], ["payments.schedule", "Level 2 · Bank Smith", true, false]],
+      limits: [["Per payment", "$500.00"], ["Daily · weekly · monthly", "$500 · $1,500 · $4,000"]] },
+    mint: { spent: "$1,284.37", budget: "$4,000.00", pct: 32, recent: [["Huntsville Utilities", "Oct 16 · Bank Smith", "$142.37"], ["Domain renewal", "Oct 12 · Bank Smith", "$18.00"], ["Office supplies", "Oct 8 · Bank Smith", "$64.10"]] },
+    rolodex: { known: [["Marcus Lee", "+1 256 555 0144"], ["Huntsville Utilities", "billing@hsvutil.example"]], unknown: [["noreply@shipnotice.io", "Read and notified only"]] },
+    identity: { email: "atlas@agents.example.com", phone: "+1 256 555 0101" },
+    bridge: [["Eyro App", "Owner · this phone", "Owner"], ["Google Calendar", "Agent access on", "Paired"], ["EySight Viewer", "Agent access off", "Paired"]],
+    keep: [["passport-scan.pdf", "Sealed"], ["bank-statements-2026", "Sealed folder"]],
+    background: [["Watch for the electric bill", "Whether check · every 6 hours", "Scheduled", ""], ["Clean up Q3 deck notes", "Done · waiting on your diff", "Waiting", "pend"]],
+    activity: [["payments.send asked for approval", "Bank Smith · 9:41 AM", "Asked", "pend"], ["fs.read Documents/Q3 deck notes.md", "Open Lane · 9:12 AM", "Ran", "ok"]],
+    settings: { level: "Level 2", autonomous: "Off", model: "Owner's pick" },
+  },
+  ledger: {
+    files: [["Client invoices", "Folder · 42 items", "Level 2"], ["Payroll 2026", "Folder · 12 items", "Level 3"], ["INV-0042.pdf", "Draft · Comm Smith", "Level 2"]],
+    foundry: [["Clients", "12 entries · yesterday"], ["How invoices go out", "Procedure · Oct 9"], ["Contractor list", "6 entries · Oct 2"]],
+    workflow: { smiths: [["Memory Smith", "Native · write to Foundry", "3 tools"], ["Comm Smith", "Example · email, text", "4 tools"], ["Invoice Smith", "Owner-made · CRM read, invoice send", "2 tools"]],
+      verb: "Send", tools: [["email.send", "Level 2 · Comm Smith", true, true], ["invoice.send", "Level 2 · Invoice Smith", true, true], ["sms.send", "Level 2 · Comm Smith", true, false]],
+      limits: [] },
+    mint: { spent: "$0.00", budget: "$0.00", pct: 0, recent: [] },
+    rolodex: { known: [["Halsey Dental", "billing@halseydental.com"], ["Ortiz Roofing", "office@ortizroofing.example"], ["Priya Nair", "+1 256 555 0177"]], unknown: [["dana@rivercitycpa.com", "Waiting on your save prompt"]] },
+    identity: { email: "ledger@agents.example.com", phone: "+1 256 555 0102" },
+    bridge: [["Eyro App", "Owner · this phone", "Owner"], ["QuickBooks", "Agent access on", "Paired"], ["Shared inbox", "Agent access on", "Paired"]],
+    keep: [["ein-letter.pdf", "Sealed"]],
+    background: [["Weekly invoice run", "When · Mondays 9:00 AM", "Scheduled", ""], ["Chase unpaid invoices", "Whether check · daily", "Scheduled", ""], ["Send INV-0042", "Waiting on your OK", "Waiting", "pend"]],
+    activity: [["email.send to Halsey Dental asked for approval", "Comm Smith · 10:02 AM", "Asked", "pend"], ["intake: new sender on email", "Intake · 9:30 AM", "Notified", ""], ["email.send to unknown sender", "Comm Smith · 8:55 AM", "Refused", "no"]],
+    settings: { level: "Level 2", autonomous: "Off", model: "Owner's pick" },
+  },
+  scout: {
+    files: [["Workshop inventory.csv", "Updated Oct 14", "Level 1"], ["Manuals", "Folder · 9 items", "Level 1"]],
+    foundry: [["Tools on hand", "31 entries · Oct 14"]],
+    workflow: { smiths: [["Memory Smith", "Native · write to Foundry", "3 tools"]],
+      verb: "Read", tools: [["fs.read", "Level 1 · Open Lane", false, true], ["web.search", "Level 1 · Open Lane", false, true]], limits: [] },
+    mint: { spent: "$0.00", budget: "$0.00", pct: 0, recent: [] },
+    rolodex: { known: [], unknown: [] },
+    identity: { email: "scout@agents.example.com", phone: "Not set" },
+    bridge: [["Eyro App", "Owner · this phone", "Owner"]],
+    keep: [],
+    background: [],
+    activity: [["Restarted after power returned", "Device · 4:12 AM", "Idle", ""], ["fs.read Workshop inventory.csv", "Open Lane · Oct 14", "Ran", "ok"]],
+    settings: { level: "Level 1", autonomous: "Off", model: "Owner's pick" },
+  },
+};
+// The desktop route each tab reads from (mock answers live in TAB_DATA).
+const TAB_ROUTES = {
+  files: "GET /api/fs/list?path=", foundry: "GET /api/foundry/graph + /api/foundry/page/{id}", workflow: "GET /api/workflow",
+  mint: "GET /api/mint/spent + /api/mint/record", rolodex: "GET /api/rolodex/cards + /api/people/threads",
+  identity: "GET /api/settings/identity", bridge: "GET /api/bridge/peers + /api/bridge/adapters",
+  keep: "GET /api/keep/status + /api/keep/files (index only while closed)", background: "GET /api/background + /api/commitments",
+  activity: "GET /api/audit/stream?limit=200", settings: "GET /api/settings/freedom + /api/settings/autonomous-mode + /api/models",
+};
+
+/* ---------------- mock behaviour ---------------- */
+const Mock = {
+  reply(inst, text) {
+    const t = text.toLowerCase();
+    if (t.includes("code") || t.includes("ide") || t.includes("fix")) return { text: "Opening it in the sandbox on a copy. When I'm done you'll get a diff to commit or discard." };
+    if (t.includes("pay") || t.includes("bill")) return { text: "Payments go through a transaction card. I'll put one in front of you when it's ready." };
+    return { text: "On it. Anything that needs your OK will show up here as a card." };
+  },
+  resolve(inst, card, approve, proof) {
+    if (!approve) return { ok: true };
+    const pin = proof && (proof.pin || (proof.proofs || []).find(p => p.method === "pin")?.pin);
+    if (pin !== PIN) return { ok: false, error: "That PIN doesn't match. Try again." };
+    return { ok: true };
+  },
+  lock(inst, on, proof) {
+    if (!on && (!proof || proof.pin !== PIN)) return { ok: false, error: "That PIN doesn't match." };
+    inst.locked = on; return { ok: true };
+  },
+};
+
+/* ---------------- helpers ---------------- */
+const $ = (s) => document.querySelector(s);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function toast(msg) { const t = el("div", "toast", msg); document.body.append(t); setTimeout(() => t.remove(), 2200); }
+const money = (minor, cur) => new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(minor / 100);
+let current = instances[0];
+const openCount = (i) => i.cards.filter(c => !c.resolved).length;
+function proofFrom(v) { return { method: "pin", pin: v }; }
+
+/* ---------------- header + banner ---------------- */
+function renderHeader() {
+  if (meeting.active) {
+    $("#who-name").textContent = "Team Meeting";
+    $("#who-sub").textContent = meeting.members.map(id => byId(id).agent).join(", ");
+    $("#who-dot").className = "dot"; $("#who-mark").textContent = "◎";
+    $("#msg").placeholder = "Message the team";
+  } else {
+    $("#who-name").textContent = current.agent;
+    const st = current.locked ? "locked" : current.state === "idle" ? "idle" : "connected";
+    $("#who-sub").textContent = `${current.device} · ${st}`;
+    $("#who-dot").className = "dot" + (current.locked ? " locked" : current.state === "idle" ? " idle" : "");
+    $("#who-mark").textContent = current.agent[0].toLowerCase();
+    $("#msg").placeholder = `Message ${current.agent}`;
+  }
+  const n = meeting.active ? 0 : openCount(current);
+  $("#pending-badge").hidden = !n; $("#pending-badge").textContent = n;
+  const others = instances.filter(i => i !== current).reduce((a, i) => a + openCount(i), 0);
+  $("#team-badge").hidden = !others; $("#team-badge").textContent = others;
+  $("#lock-btn").classList.toggle("lock-on", !meeting.active && current.locked);
+  $("#lock-btn").hidden = meeting.active; $("#pending-btn").hidden = meeting.active;
+
+  const b = $("#banner"); b.innerHTML = "";
+  if (!navigator.onLine) {
+    const d = el("div", "banner offline");
+    d.append(el("span", "grow", "Can't reach Eyro. Check your connection; this reconnects by itself."));
+    b.append(d);
+  } else if (meeting.active) {
+    const d = el("div", "banner meeting");
+    d.append(el("span", "grow", "Team Meeting. Agents see each other's messages labeled team member."));
+    const end = el("button", "", "End"); end.onclick = endMeeting; d.append(end); b.append(d);
+  } else if (current.locked) {
+    const d = el("div", "banner locked");
+    d.append(el("span", "grow", `${current.agent} is locked. Nothing runs and nothing reads.`));
+    const u = el("button", "", "Unlock"); u.onclick = () => unlockSheet(); d.append(u); b.append(d);
+  } else if (current.state === "idle") {
+    const d = el("div", "banner idle");
+    d.append(el("span", "grow", `${current.agent} restarted after a power cut and is idle.`));
+    const w = el("button", "", "Wake"); w.onclick = async () => { await EyroAPI.wake(current); current.thread.push({ who: "sys", text: `${current.agent} is awake.` }); renderAll(); }; d.append(w); b.append(d);
+  }
+  const blocked = !navigator.onLine || (!meeting.active && (current.locked || current.state === "idle"));
+  $("#msg").disabled = blocked;
+  updateSend();
+}
+const byId = (id) => instances.find(i => i.id === id);
+
+/* ---------------- chat log ---------------- */
+function renderLog() {
+  const log = $("#log"); log.innerHTML = "";
+  if (meeting.active) {
+    log.append(el("div", "sys", "Each agent gets your messages as the owner. Messages from other agents reach it labeled team member, without owner authority."));
+    for (const m of meeting.log) log.append(bubble(m, true));
+  } else {
+    for (const m of current.thread) log.append(m.who === "sys" ? el("div", "sys", m.text) : bubble(m, false));
+    for (const c of current.cards) log.append(renderCard(c));
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function bubble(m, inMeeting) {
+  const w = el("div", "msg " + (m.who === "owner" ? "owner" : "agent"));
+  const from = el("div", "from");
+  if (inMeeting) {
+    if (m.who === "owner") { from.append(el("span", "", "You")); from.append(el("span", "tag owner", "owner")); }
+    else { from.append(el("span", "", byId(m.who).agent)); from.append(el("span", "tag", "team member")); }
+  } else from.append(el("span", "", m.who === "owner" ? "You" : current.agent));
+  w.append(from, el("div", "body", m.text));
+  return w;
+}
+
+/* ---------------- cards ---------------- */
+const CARD_LABEL = { payment: "Transaction card", approval: "Needs your OK", diff: "Sandbox changes", contact: "New contact" };
+function renderCard(c) {
+  const card = el("div", "card" + (c.resolved ? " done" : ""));
+  const head = el("div", "card-head"); head.append(el("span", "kind-dot"), el("span", "", CARD_LABEL[c.type]));
+  card.append(head);
+  if (c.resolved) { card.append(el("div", "card-title", c.summary || c.sender)); card.append(el("div", "result " + (c.resolved.ok ? "ok" : "no"), c.resolved.text)); return card; }
+  ({ payment: payCard, approval: approvalCard, diff: diffCard, contact: contactCard })[c.type](card, c);
+  return card;
+}
+function rows(card, pairs) {
+  const r = el("div", "rows");
+  for (const [k, v, mono] of pairs) { if (v == null) continue; const x = el("div", "row"); x.append(el("span", "k", k), el("span", "v" + (mono ? " mono" : ""), v)); r.append(x); }
+  card.append(r);
+}
+function pinField(card, id) {
+  const f = el("div", "field"); const l = el("label", "", "PIN"); l.htmlFor = id;
+  const i = el("input", "input"); i.id = id; i.type = "password"; i.inputMode = "numeric"; i.autocomplete = "off"; i.placeholder = LIVE ? "" : "Example PIN: 1234";
+  f.append(l, i); card.append(f); return i;
+}
+function done(c, ok, text) { c.resolved = { ok, text }; renderAll(); }
+
+function approvalCard(card, c) {
+  card.append(el("div", "card-title", c.summary));
+  rows(card, [["Action", c.action_type, true], ["Requested by", c.requested_by], ...Object.entries(c.details || {})]);
+  const pin = pinField(card, "pin-" + c.id); const err = el("div", "err"); card.append(err);
+  const a = el("div", "actions"); const no = el("button", "btn", "Decline"); const yes = el("button", "btn primary", "Approve");
+  no.onclick = async () => { await EyroAPI.resolve(current, c, false); done(c, false, "Declined. Nothing was sent."); };
+  yes.onclick = async () => { const r = await EyroAPI.resolve(current, c, true, proofFrom(pin.value)); if (!r.ok) { err.textContent = r.error; return; } done(c, true, "Approved. Eyro is running it."); };
+  a.append(no, yes); card.append(a);
+}
+function payCard(card, c) {
+  const cur = c.card.amount.currency;
+  card.append(el("div", "card-title", c.summary));
+  rows(card, [["Pays", c.card.recipient_ref], ["Requested by", c.requested_by]]);
+  const f1 = el("div", "field"); const l1 = el("label", "", `Amount (${cur})`); l1.htmlFor = "amt-" + c.id;
+  const amt = el("input", "input"); amt.id = "amt-" + c.id; amt.type = "number"; amt.step = "0.01"; amt.min = "0.01"; amt.value = (c.card.amount.minor_units / 100).toFixed(2);
+  f1.append(l1, amt); card.append(f1);
+  const f2 = el("div", "field"); const l2 = el("label", "", "Band (what the OS allows if the final amount moves)"); l2.htmlFor = "band-" + c.id;
+  const band = el("select", "input"); band.id = "band-" + c.id;
+  for (const p of [2, 3, 4, 5]) { const o = el("option", "", `${p}% either way`); o.value = p * 100; if (p * 100 === c.card.band_bps) o.selected = true; band.append(o); }
+  f2.append(l2, band); card.append(f2);
+  const range = el("div", "note"); card.append(range);
+  const upd = () => { const v = parseFloat(amt.value) || 0, b = band.value / 10000; range.textContent = `Eyro refuses anything outside ${money(Math.round(v * (1 - b) * 100), cur)} to ${money(Math.round(v * (1 + b) * 100), cur)}.`; };
+  amt.oninput = upd; band.onchange = upd; upd();
+  const pin = pinField(card, "pin-" + c.id); const err = el("div", "err"); card.append(err);
+  const a = el("div", "actions"); const no = el("button", "btn", "Decline"); const yes = el("button", "btn primary", "Confirm card");
+  no.onclick = async () => { await EyroAPI.resolve(current, c, false); done(c, false, "Declined. No payment was made."); };
+  yes.onclick = async () => {
+    const r = await EyroAPI.resolve(current, c, true, proofFrom(pin.value), { amount_minor: Math.round(parseFloat(amt.value) * 100), band_bps: +band.value });
+    if (!r.ok) { err.textContent = r.error; return; }
+    done(c, true, `Card confirmed at ${money(Math.round(parseFloat(amt.value) * 100), cur)}. The payment is held to it.`);
+  };
+  a.append(no, yes); card.append(a);
+}
+function diffCard(card, c) {
+  card.append(el("div", "card-title", c.summary));
+  rows(card, [["File", c.file, true]]);
+  const d = el("div", "diff");
+  for (const line of c.patch) d.append(el("div", line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : line.startsWith("@@") ? "hunk" : "", line));
+  card.append(d);
+  card.append(el("div", "note", "The agent worked on a copy. Your file is unchanged until you commit."));
+  const a = el("div", "actions"); const no = el("button", "btn", "Discard"); const yes = el("button", "btn primary", "Commit");
+  no.onclick = async () => { await EyroAPI.copy(current, c, "discard"); done(c, false, "Discarded. Your file is as it was."); };
+  yes.onclick = async () => { await EyroAPI.copy(current, c, "commit"); done(c, true, "Committed to your file."); };
+  a.append(no, yes); card.append(a);
+}
+function contactCard(card, c) {
+  card.append(el("div", "card-title", `New on ${c.channel}: ${c.sender}`));
+  rows(card, [["Verified", c.verified ? "Yes" : "No"], ["First message", c.preview]]);
+  const f = el("div", "field"); const l = el("label", "", "Name for the Rolodex"); l.htmlFor = "name-" + c.id;
+  const n = el("input", "input"); n.id = "name-" + c.id; n.value = LIVE ? "" : ex("Dana Whitfield"); f.append(l, n); card.append(f);
+  const a = el("div", "actions"); const never = el("button", "btn", "Never for this one"); const save = el("button", "btn primary", "Save");
+  never.onclick = async () => { await EyroAPI.firstContact(current, c, { choice: "never" }); done(c, false, "They won't be offered again."); };
+  save.onclick = async () => { await EyroAPI.firstContact(current, c, { choice: "add", name: n.value }); done(c, true, `${n.value} is in the Rolodex as Known.`); };
+  a.append(never, save); card.append(a);
+}
+
+/* ---------------- composer ---------------- */
+function updateSend() { $("#send").disabled = !$("#msg").value.trim() || $("#msg").disabled; }
+$("#msg").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; updateSend(); });
+$("#msg").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+$("#send").onclick = send;
+async function send() {
+  const text = $("#msg").value.trim(); if (!text) return;
+  $("#msg").value = ""; $("#msg").style.height = "auto"; updateSend();
+  if (meeting.active) {
+    meeting.log.push({ who: "owner", text }); renderLog();
+    const think = el("div", "thinking"); think.append(el("i"), el("i"), el("i")); $("#log").append(think);
+    let replies;
+    try { replies = await EyroAPI.meeting(meeting, meeting.members.map(byId), text); }
+    catch (e) { think.remove(); toast(e.message); return; }
+    if (!replies.length) { think.remove(); return; }
+    setTimeout(() => { meeting.log.push(...replies); renderLog(); }, 700);
+    return;
+  }
+  const inst = current;
+  inst.thread.push({ who: "owner", text }); renderLog();
+  const think = el("div", "thinking"); think.append(el("i"), el("i"), el("i")); $("#log").append(think); $("#log").scrollTop = 1e9;
+  const r = await EyroAPI.send(inst, text);
+  setTimeout(() => { inst.thread.push({ who: "agent", text: r.text }); if (inst === current) renderLog(); }, 600);
+}
+
+/* ---------------- drawer ---------------- */
+const ICON = {
+  team: '<path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16 11a3 3 0 1 0 0-6M2 20c0-3 3-5 6-5s6 2 6 5M16 15c3 0 6 2 6 5"/>',
+  files: '<path d="M4 6h6l2 2h8v10H4z"/>', foundry: '<circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="1.5"/><circle cx="19" cy="7" r="1.5"/><circle cx="17" cy="19" r="1.5"/><path d="M6 7l4 3M18 8l-4 2.5M16 18l-2.5-3.5"/>',
+  workflow: '<path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17" cy="6" r="2"/><circle cx="14" cy="18" r="2"/>',
+  mint: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>', rolodex: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="10" cy="11" r="2"/><path d="M7 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M15 10h3M15 13h3"/>',
+  identity: '<circle cx="12" cy="9" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/>', bridge: '<path d="M3 15c3-6 15-6 18 0M3 15v4M21 15v4M8 12v7M16 12v7"/>',
+  keep: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0"/>', background: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/>',
+  activity: '<path d="M3 12h4l3-7 4 14 3-7h4"/>', settings: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+};
+const svg = (k) => `<svg viewBox="0 0 24 24">${ICON[k]}</svg>`;
+const TABS = [
+  ["files", "Files"], ["foundry", "Foundry"], ["workflow", "Workflow Manager"], ["mint", "Mint"], ["rolodex", "Rolodex"],
+  ["identity", "Agent Identity"], ["bridge", "Bridge"], ["keep", "TheKeep"], ["background", "Background"], ["activity", "Activity"], ["settings", "Settings"],
+];
+function renderDrawer() {
+  const list = $("#drawer-list"); list.innerHTML = "";
+  const t = el("button", "ditem"); t.innerHTML = svg("team") + "<span>Team</span>";
+  const n = instances.reduce((a, i) => a + openCount(i), 0);
+  if (n) t.append(el("span", "count", `${n} pending`));
+  t.onclick = () => { closeDrawer(); openSheet("team"); }; list.append(t);
+  list.append(el("div", "dsec", meeting.active ? "Tabs (open an agent first)" : `${current.agent}'s tabs`));
+  for (const [k, label] of TABS) {
+    const b = el("button", "ditem"); b.innerHTML = svg(k) + `<span>${label}</span>`;
+    b.disabled = meeting.active; if (meeting.active) b.style.opacity = .4;
+    b.onclick = () => { closeDrawer(); openSheet(k); }; list.append(b);
+  }
+  $("#drawer-foot").textContent = `${instances.length} Eyros paired to this app`;
+}
+function openDrawer() { renderDrawer(); $("#drawer").classList.add("open"); $("#scrim").classList.add("open"); }
+function closeDrawer() { $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); }
+$("#menu-btn").onclick = openDrawer; $("#scrim").onclick = closeDrawer;
+$("#who").onclick = () => openSheet("team");
+$("#pending-btn").onclick = () => openSheet("pending");
+$("#lock-btn").onclick = async () => { if (current.locked) return unlockSheet(); await EyroAPI.lock(current, true); current.thread.push({ who: "sys", text: `${current.agent} locked from the app.` }); toast("Locked"); renderAll(); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeDrawer(); closeSheet(); } });
+
+/* ---------------- sheets ---------------- */
+async function openSheet(kind) {
+  const [title, sub, build] = SHEETS[kind]();
+  $("#sheet-title").textContent = title; $("#sheet-sub").textContent = sub || "";
+  const body = $("#sheet-body"); body.innerHTML = "";
+  $("#sheet").classList.add("open"); $("#sheet").dataset.kind = kind;
+  if (!(kind in TAB_ROUTES)) { build(body); return; }
+  const inst = current;
+  body.append(el("div", "empty", `Reading ${inst.agent}'s ${title}…`));
+  const d = await EyroAPI.tab(inst, kind);
+  if (inst !== current || $("#sheet").dataset.kind !== kind) return;
+  body.innerHTML = ""; build(body, d);
+}
+function closeSheet() { $("#sheet").classList.remove("open"); }
+$("#sheet-back").onclick = closeSheet;
+function section(body, title, extra) { const s = el("div"); const h = el("div", "sec-title", title); if (extra) h.append(extra); s.append(h); const l = el("div", "list"); s.append(l); body.append(s); return l; }
+function li(list, name, desc, right, onclick) {
+  const r = el(onclick ? "button" : "div", "li"); const m = el("div", "li-main"); m.append(el("div", "li-name", name)); if (desc) m.append(el("div", "li-desc", desc));
+  r.append(m); if (right) r.append(typeof right === "string" ? el("span", "li-right", right) : right); if (onclick) r.onclick = onclick; list.append(r); return r;
+}
+const pill = (t, c) => el("span", "pill " + (c || ""), t);
+const viewOnly = (body, t) => body.append(el("div", "viewonly", t));
+
+const SHEETS = {
+  team: () => ["Team", `${instances.length} Eyros paired`, (b) => {
+    const l = section(b, "Agents");
+    for (const i of instances) {
+      const r = el("button", "agent-card");
+      const m = el("div", "mark", i.agent[0].toLowerCase());
+      const info = el("div", "li-main"); info.append(el("div", "li-name", i.agent));
+      info.append(el("div", "li-desc", `${i.device} · ${i.locked ? "locked" : i.state === "idle" ? "idle" : "connected"}`));
+      const n = openCount(i);
+      r.append(m, info, n ? pill(`${n} pending`, "pend") : pill("Nothing pending"));
+      r.onclick = () => { meeting.active = false; current = i; closeSheet(); renderAll(); if (n) setTimeout(() => openSheet("pending"), 200); };
+      l.append(r);
+    }
+    const s = el("div"); s.append(el("div", "sec-title", "Team Meeting"));
+    s.append(el("div", "li-desc", "A group message in this app. It's the only way an agent learns the others exist."));
+    const go = el("button", "btn primary", "Start a Team Meeting"); go.style.marginTop = "10px"; go.style.width = "100%";
+    go.onclick = () => openSheet("meeting"); s.append(go); b.append(s);
+  }],
+  meeting: () => ["Team Meeting", "Pick who joins", (b) => {
+    const picked = new Set(instances.filter(i => i.state !== "idle" && !i.locked).map(i => i.id));
+    const l = section(b, "Members");
+    const draw = () => { l.innerHTML = ""; for (const i of instances) {
+      const off = i.state === "idle" || i.locked;
+      const r = el("button", "agent-card"); r.disabled = off; if (off) r.style.opacity = .45;
+      const c = el("span", "check" + (picked.has(i.id) ? " on" : ""));
+      const info = el("div", "li-main"); info.append(el("div", "li-name", i.agent), el("div", "li-desc", off ? (i.locked ? "Locked" : "Idle, wake it first") : i.device));
+      r.append(c, info); r.onclick = () => { picked.has(i.id) ? picked.delete(i.id) : picked.add(i.id); draw(); start.disabled = picked.size < 2; }; l.append(r);
+    } };
+    const start = el("button", "btn primary", "Start meeting"); start.style.width = "100%";
+    start.onclick = () => { meeting.active = true; meeting.id = null; meeting.members = [...picked]; meeting.log = []; closeSheet(); renderAll(); };
+    draw(); b.append(el("div", "li-desc", "Pick two or more. Your messages carry owner authority. Each agent's messages reach the others as team member.")); b.append(start);
+  }],
+  pending: () => [`Pending for ${current.agent}`, `${openCount(current)} waiting`, (b) => {
+    const open = current.cards.filter(c => !c.resolved);
+    if (!open.length) { b.append(el("div", "empty", "Nothing is waiting.")); return; }
+    for (const c of open) b.append(renderCard(c));
+  }],
+  files: () => ["Files", current.agent, (b, d) => {
+    const l = section(b, "Documents");
+    d.forEach(([n, ds, r]) => li(l, n, ds, pill(r)));
+    viewOnly(b, "Browse only on mobile. Ask the agent to open, move or change files.");
+  }],
+  foundry: () => ["Foundry", current.agent, (b, d) => {
+    const l = section(b, "Recent pages");
+    d.forEach(([n, ds]) => li(l, n, ds));
+    viewOnly(b, "The Foundry is written only through the Memory Smith. Tell the agent what to remember.");
+  }],
+  workflow: () => ["Workflow Manager", current.agent, (b, d) => {
+    const s = section(b, "Smiths");
+    d.smiths.forEach(([n, ds, r]) => li(s, n, ds, r, () => toast(`${n} detail`)));
+    const t = section(b, `Tools under ${d.verb}`);
+    for (const [n, ds, risky, on] of d.tools) {
+      const tg = el("button", "toggle"); tg.setAttribute("role", "switch"); tg.setAttribute("aria-checked", on); tg.setAttribute("aria-label", n);
+      tg.onclick = () => { const v = tg.getAttribute("aria-checked") !== "true"; tg.setAttribute("aria-checked", v); toast(`${n} ${v ? "on" : "off"} (needs your PIN in the real app)`); };
+      const r = li(t, n, ds, tg); if (risky) r.querySelector(".li-main").append(pill("risky", "risk"));
+    }
+    if (d.limits.length) { const lim = section(b, "Payment limits"); d.limits.forEach(([n, v]) => li(lim, n, null, v)); }
+  }],
+  mint: () => ["Mint", "View only", (b, d) => {
+    const l = section(b, "This month");
+    const box = el("div", "stat"); const top = el("div", "stat-top"); top.append(el("b", "", d.spent), el("span", "", `of ${d.budget}`));
+    const m = el("div", "meter"); const fill = el("i"); fill.style.width = d.pct + "%"; m.append(fill); box.append(top, m); l.append(box);
+    const r = section(b, "Recent");
+    if (!d.recent.length) r.append(el("div", "empty", "No payments yet."));
+    d.recent.forEach(([n, ds, v]) => li(r, n, ds, v));
+    viewOnly(b, "Limits are set in the Workflow Manager.");
+  }],
+  rolodex: () => ["Rolodex", current.agent, (b, d) => {
+    const l = section(b, "Contacts");
+    d.known.forEach(([n, ds]) => li(l, n, ds, pill("Known", "ok")));
+    if (d.unknown.length) { const u = section(b, "Unknown senders"); d.unknown.forEach(([n, ds]) => li(u, n, ds, pill("Unknown"))); }
+  }],
+  identity: () => ["Agent Identity", current.agent, (b, d) => {
+    const l = section(b, "This agent");
+    li(l, "Name", null, current.agent); li(l, "Email", null, d.email); li(l, "Phone", null, d.phone); li(l, "Device", null, current.device);
+  }],
+  bridge: () => ["Bridge", "Paired apps", (b, d) => {
+    const l = section(b, "Apps");
+    d.forEach(([n, ds, r]) => li(l, n, ds, pill(r, r === "Owner" ? "" : "ok")));
+    viewOnly(b, "New apps pair at the device. Unpair this phone from the device itself.");
+  }],
+  keep: () => ["TheKeep", "Closed", (b, d) => {
+    const l = section(b, "Files in the Keep");
+    if (!d.length) l.append(el("div", "empty", "The Keep is empty."));
+    d.forEach(([n, ds]) => li(l, n, ds, pill("Closed")));
+    const s = el("div"); s.append(el("div", "sec-title", "Send to the Keep"));
+    const lab = el("label", "btn primary", "Choose a file"); lab.htmlFor = "keep-file"; lab.style.display = "block"; lab.style.textAlign = "center";
+    const inp = el("input"); inp.type = "file"; inp.id = "keep-file"; inp.hidden = true;
+    // Real app: POST /api/keep/files over this instance's relay pairing; sealed to the Keep's public key on arrival.
+    inp.onchange = async () => { const f = inp.files[0]; if (!f) return; await EyroAPI.keepSend(current, f.name); openSheet("keep"); toast(`${f.name} sent to ${current.agent}'s Keep`); inp.value = ""; };
+    s.append(lab, inp); b.append(s);
+    viewOnly(b, "You can send files in from here. Opening the Keep happens at the device.");
+  }],
+  background: () => ["Background", current.agent, (b, d) => {
+    const l = section(b, "Running and scheduled");
+    if (!d.length) l.append(el("div", "empty", "Nothing scheduled."));
+    d.forEach(([n, ds, r, c]) => li(l, n, ds, pill(r, c)));
+  }],
+  activity: () => ["Activity", "Audit log", (b, d) => {
+    const l = section(b, "Today");
+    d.forEach(([n, ds, r, c]) => li(l, n, ds, pill(r, c)));
+  }],
+  settings: () => ["Settings", current.agent, (b, d) => {
+    const l = section(b, "Agent");
+    li(l, "Freedom level", null, d.level); li(l, "Autonomous mode", "Risky tools ask first while off", d.autonomous); li(l, "Model", null, d.model);
+    const p = section(b, "This app");
+    li(p, "Pairing", LIVE ? "Paired with this Eyro. Survives restarts." : "Paired by cable. Survives restarts.", pill("Paired", "ok"));
+    li(p, "Unpair", "Done at the device, not from the phone", "");
+  }],
+};
+
+function unlockSheet() {
+  const [, , ] = [];
+  $("#sheet-title").textContent = `Unlock ${current.agent}`; $("#sheet-sub").textContent = "Owner credentials";
+  const b = $("#sheet-body"); b.innerHTML = "";
+  const card = el("div", "card"); const head = el("div", "card-head"); head.append(el("span", "kind-dot"), el("span", "", "Locked")); card.append(head);
+  card.append(el("div", "note", "Lock stops everything, reads included. Unlocking needs your PIN."));
+  const pin = pinField(card, "unlock-pin"); const err = el("div", "err"); card.append(err);
+  const a = el("div", "actions"); const go = el("button", "btn primary", "Unlock");
+  go.onclick = async () => { const r = await EyroAPI.lock(current, false, proofFrom(pin.value)); if (!r.ok) { err.textContent = r.error; return; } closeSheet(); toast("Unlocked"); renderAll(); };
+  a.append(go); card.append(a); b.append(card);
+  $("#sheet").classList.add("open");
+}
+
+function endMeeting() { meeting.active = false; meeting.id = null; meeting.log = []; renderAll(); toast("Meeting ended"); }
+function renderAll() { renderHeader(); renderLog(); if ($("#sheet").classList.contains("open") && $("#sheet").dataset.kind === "pending") openSheet("pending"); }
+/* ---------------- installed app ---------------- */
+const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (!standalone) {
+  $("#install").hidden = false;
+  // Lead with the steps for this phone.
+  if (isIOS) $("#inst-ios").classList.add("mine"), $("#inst-ios").after($("#inst-android")); else $("#inst-android").classList.add("mine");
+}
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); deferredInstall = e;
+  $("#inst-btn").hidden = false; $("#inst-android-steps").hidden = true;
+});
+$("#inst-btn").onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt(); await deferredInstall.userChoice.catch(() => null); deferredInstall = null;
+};
+window.addEventListener("appinstalled", () => { toast("Eyro installed. Open it from your home screen."); });
+$("#inst-preview").onclick = () => { $("#install").hidden = true; };
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// Keyboard: size the app to what's visible so the composer stays above the keys.
+const vv = window.visualViewport;
+function fitViewport() {
+  if (!vv) return;
+  const root = document.documentElement;
+  const kbUp = window.innerHeight - vv.height > 120;
+  root.classList.toggle("kb", kbUp);
+  root.style.setProperty("--vvh", kbUp ? vv.height + "px" : "100%");
+  if (kbUp) { window.scrollTo(0, 0); $("#log").scrollTop = $("#log").scrollHeight; }
+}
+if (vv) { vv.addEventListener("resize", fitViewport); vv.addEventListener("scroll", fitViewport); }
+
+window.addEventListener("online", renderAll);
+window.addEventListener("offline", renderAll);
+
+// A notification opens the app on the agent that needs you (#atlas).
+function fromHash() { const i = byId(location.hash.slice(1)); if (i) { meeting.active = false; current = i; } }
+window.addEventListener("hashchange", () => { fromHash(); renderAll(); });
+fromHash();
+
+// With a real Eyro paired, load each one; the example label stays only on example data.
+$(".proto").hidden = LIVE;
+renderAll();
+if (LIVE) for (const i of instances) EyroAPI.load(i).then(renderAll, (e) => { i.thread.push({ who: "sys", text: `Can't reach this Eyro: ${e.message}` }); renderAll(); });
+</script>
+
+</body>
+</html>
