@@ -2,7 +2,7 @@
  * Caches only the app's own shell so it opens with no signal and shows
  * "can't reach Eyro" instead of a browser error. Nothing from Eyro is ever
  * cached: agent data comes over the relay socket, sealed, and stays live. */
-const SHELL = "eyro-shell-v2";
+const SHELL = "eyro-shell-v3";
 const FILES = ["./", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
                "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/logo-96.png"];
 
