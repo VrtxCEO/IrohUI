@@ -357,8 +357,12 @@ const EyroAPI = {
     if (LIVE) return Real.tab(inst, kind);
     await new Promise(r => setTimeout(r, 150)); return structuredClone(TAB_DATA[inst.id][kind]);
   },
-  // POST /api/keep/files {name, content: base64}
-  async keepSend(inst, name) { return LIVE ? Real.keepSend(inst, name) : (TAB_DATA[inst.id].keep.push([name, "Sealed on arrival"]), { ok: true }); },
+  // POST /api/keep/unlock {admin_phrase, pin}: TheKeep's own credential, asked each time, never stored.
+  async keepUnlock(inst, phrase, pin) { return LIVE ? Real.keepUnlock(inst, phrase, pin) : Mock.keepUnlock(inst, phrase, pin); },
+  // POST /api/keep/files {name, content: base64}, while TheKeep is open.
+  async keepSend(inst, name) { return LIVE ? Real.keepSend(inst, name) : (TAB_DATA[inst.id].keep.files.push([name, "Added just now"]), { ok: true }); },
+  // POST /api/keep/lock
+  async keepLock(inst) { return LIVE ? Real.keepLock(inst) : (TAB_DATA[inst.id].keep.open = false, { ok: true }); },
   // Wake after a power-return restart: not an Eyro route yet.
   async wake(inst) { if (LIVE) return { ok: false }; inst.state = "on"; return { ok: true }; },
   // Team Meeting: no meeting route. The app sends each message to every member's
@@ -553,6 +557,14 @@ const Real = {
       return { ok: false, error: proofError(e) };
     }
   },
+  async keepUnlock(inst, phrase, pin) {
+    try { await call(inst, "POST", "/api/keep/unlock", { admin_phrase: phrase, pin }); return { ok: true }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  },
+  async keepLock(inst) {
+    try { await call(inst, "POST", "/api/keep/lock", {}); return { ok: true }; }
+    catch (e) { return { ok: false, error: e.message }; }
+  },
   async keepSend(inst, name) {
     // The Keep screen calls this from its file input's change handler, while the file is still selected.
     const f = document.getElementById("keep-file")?.files?.[0];
@@ -633,14 +645,12 @@ const TABS_REAL = {
     return [["Eyro App", "Owner · this phone", "Owner"],
       ...(p.peers || []).map((b) => [b.display_name, b.agent_access ? "Agent access on" : "Agent access off", b.active ? "Paired" : "Paired · offline"])];
   },
-  // GET /api/keep/files (423 while the Keep is locked: then only the count from /api/keep/status).
+  // GET /api/keep/status, then GET /api/keep/files while it's open.
   async keep(inst) {
-    try { return (await call(inst, "GET", "/api/keep/files")).map((f) => [f.name, `Added ${fmtWhen(f.added_at)}`]); }
-    catch (e) {
-      if (e.status !== 423) throw e;
-      const s = await call(inst, "GET", "/api/keep/status");
-      return s.file_count ? [[`${s.file_count} sealed file${s.file_count === 1 ? "" : "s"}`, "Names show once the Keep is open"]] : [];
-    }
+    const s = await call(inst, "GET", "/api/keep/status");
+    if (!s.open) return { open: false, count: s.file_count || 0, initialized: s.initialized, lockout: s.lockout_active ? s.lockout_seconds_remaining : 0 };
+    const files = (await call(inst, "GET", "/api/keep/files")).map((f) => [f.name, `Added ${fmtWhen(f.added_at)}`]);
+    return { open: true, files };
   },
   // GET /api/background (work in progress) + GET /api/commitments (scheduled).
   async background(inst) {
@@ -732,7 +742,7 @@ const TAB_DATA = {
     rolodex: { known: [["Marcus Lee", "+1 256 555 0144"], ["Huntsville Utilities", "billing@hsvutil.example"]], unknown: [["noreply@shipnotice.io", "Read and notified only"]] },
     identity: { email: "atlas@agents.example.com", phone: "+1 256 555 0101" },
     bridge: [["Eyro App", "Owner · this phone", "Owner"], ["Google Calendar", "Agent access on", "Paired"], ["EySight Viewer", "Agent access off", "Paired"]],
-    keep: [["passport-scan.pdf", "Sealed"], ["bank-statements-2026", "Sealed folder"]],
+    keep: { open: false, files: [["passport-scan.pdf", "Added Oct 2"], ["bank-statements-2026", "Added Sep 30"]] },
     background: [["Watch for the electric bill", "Whether check · every 6 hours", "Scheduled", ""], ["Clean up Q3 deck notes", "Done · waiting on your diff", "Waiting", "pend"]],
     activity: [["payments.send asked for approval", "Bank Smith · 9:41 AM", "Asked", "pend"], ["fs.read Documents/Q3 deck notes.md", "Open Lane · 9:12 AM", "Ran", "ok"]],
     settings: { level: "Level 2", autonomous: "Off", model: "Owner's pick" },
@@ -747,7 +757,7 @@ const TAB_DATA = {
     rolodex: { known: [["Halsey Dental", "billing@halseydental.com"], ["Ortiz Roofing", "office@ortizroofing.example"], ["Priya Nair", "+1 256 555 0177"]], unknown: [["dana@rivercitycpa.com", "Waiting on your save prompt"]] },
     identity: { email: "ledger@agents.example.com", phone: "+1 256 555 0102" },
     bridge: [["Eyro App", "Owner · this phone", "Owner"], ["QuickBooks", "Agent access on", "Paired"], ["Shared inbox", "Agent access on", "Paired"]],
-    keep: [["ein-letter.pdf", "Sealed"]],
+    keep: { open: false, files: [["ein-letter.pdf", "Added Aug 14"]] },
     background: [["Weekly invoice run", "When · Mondays 9:00 AM", "Scheduled", ""], ["Chase unpaid invoices", "Whether check · daily", "Scheduled", ""], ["Send INV-0042", "Waiting on your OK", "Waiting", "pend"]],
     activity: [["email.send to Halsey Dental asked for approval", "Comm Smith · 10:02 AM", "Asked", "pend"], ["intake: new sender on email", "Intake · 9:30 AM", "Notified", ""], ["email.send to unknown sender", "Comm Smith · 8:55 AM", "Refused", "no"]],
     settings: { level: "Level 2", autonomous: "Off", model: "Owner's pick" },
@@ -761,7 +771,7 @@ const TAB_DATA = {
     rolodex: { known: [], unknown: [] },
     identity: { email: "scout@agents.example.com", phone: "Not set" },
     bridge: [["Eyro App", "Owner · this phone", "Owner"]],
-    keep: [],
+    keep: { open: false, files: [] },
     background: [],
     activity: [["Restarted after power returned", "Device · 4:12 AM", "Idle", ""], ["fs.read Workshop inventory.csv", "Open Lane · Oct 14", "Ran", "ok"]],
     settings: { level: "Level 1", autonomous: "Off", model: "Owner's pick" },
@@ -772,7 +782,7 @@ const TAB_ROUTES = {
   files: "GET /api/fs/list?path=", foundry: "GET /api/foundry/graph + /api/foundry/page/{id}", workflow: "GET /api/workflow",
   mint: "GET /api/mint/spent + /api/mint/record", rolodex: "GET /api/rolodex/cards + /api/people/threads",
   identity: "GET /api/settings/identity", bridge: "GET /api/bridge/peers + /api/bridge/adapters",
-  keep: "GET /api/keep/status + /api/keep/files (index only while closed)", background: "GET /api/background + /api/commitments",
+  keep: "GET /api/keep/status + /api/keep/files (while open)", background: "GET /api/background + /api/commitments",
   activity: "GET /api/audit/stream?limit=200", settings: "GET /api/settings/freedom + /api/settings/autonomous-mode + /api/models",
 };
 
@@ -793,6 +803,10 @@ const Mock = {
   lock(inst, on, proof) {
     if (!on && (!proof || proof.pin !== PIN)) return { ok: false, error: "That PIN doesn't match." };
     inst.locked = on; return { ok: true };
+  },
+  keepUnlock(inst, phrase, pin) {
+    if (!phrase || pin !== PIN) return { ok: false, error: "Incorrect phrase or PIN." };
+    TAB_DATA[inst.id].keep.open = true; return { ok: true };
   },
 };
 
@@ -1118,17 +1132,39 @@ const SHEETS = {
     d.forEach(([n, ds, r]) => li(l, n, ds, pill(r, r === "Owner" ? "" : "ok")));
     viewOnly(b, "New apps pair at the device. Unpair this phone from the device itself.");
   }],
-  keep: () => ["TheKeep", "Closed", (b, d) => {
+  keep: () => ["TheKeep", "", (b, d) => {
+    $("#sheet-sub").textContent = d.open ? "Open" : "Closed";
+    if (!d.open) {
+      const l = section(b, "Files in the Keep");
+      l.append(el("div", "empty", d.count ? `${d.count} sealed file${d.count === 1 ? "" : "s"}. Names show once it's open.` : "The Keep is empty."));
+      const s = el("div"); s.append(el("div", "sec-title", "Open the Keep"));
+      const f1 = el("div", "field"); const l1 = el("label", "", "Admin phrase"); l1.htmlFor = "keep-phrase";
+      const phrase = el("input", "input"); phrase.id = "keep-phrase"; phrase.type = "password"; phrase.autocomplete = "off";
+      f1.append(l1, phrase); s.append(f1);
+      const pin = pinField(s, "keep-pin");
+      const err = el("div", "err"); s.append(err);
+      if (d.lockout) err.textContent = `Too many wrong tries. Try again in ${Math.ceil(d.lockout / 60)} min.`;
+      const open = el("button", "btn primary", "Open"); open.style.width = "100%";
+      open.onclick = async () => {
+        const r = await EyroAPI.keepUnlock(current, phrase.value, pin.value);
+        phrase.value = ""; pin.value = "";
+        if (!r.ok) { err.textContent = r.error; return; }
+        openSheet("keep");
+      };
+      s.append(open); b.append(s);
+      return;
+    }
     const l = section(b, "Files in the Keep");
-    if (!d.length) l.append(el("div", "empty", "The Keep is empty."));
-    d.forEach(([n, ds]) => li(l, n, ds, pill("Closed")));
+    if (!d.files.length) l.append(el("div", "empty", "The Keep is empty."));
+    d.files.forEach(([n, ds]) => li(l, n, ds));
     const s = el("div"); s.append(el("div", "sec-title", "Send to the Keep"));
     const lab = el("label", "btn primary", "Choose a file"); lab.htmlFor = "keep-file"; lab.style.display = "block"; lab.style.textAlign = "center";
     const inp = el("input"); inp.type = "file"; inp.id = "keep-file"; inp.hidden = true;
-    // Real app: POST /api/keep/files over this instance's relay pairing; sealed to the Keep's public key on arrival.
-    inp.onchange = async () => { const f = inp.files[0]; if (!f) return; await EyroAPI.keepSend(current, f.name); openSheet("keep"); toast(`${f.name} sent to ${current.agent}'s Keep`); inp.value = ""; };
-    s.append(lab, inp); b.append(s);
-    viewOnly(b, "You can send files in from here. Opening the Keep happens at the device.");
+    inp.onchange = async () => { const f = inp.files[0]; if (!f) return; const r = await EyroAPI.keepSend(current, f.name); inp.value = ""; if (r.ok) { toast(`${f.name} added to ${current.agent}'s Keep`); openSheet("keep"); } };
+    const lock = el("button", "btn", "Lock the Keep"); lock.style.width = "100%"; lock.style.marginTop = "10px";
+    lock.onclick = async () => { const r = await EyroAPI.keepLock(current); if (!r.ok) { toast(r.error); return; } toast("TheKeep is locked"); openSheet("keep"); };
+    s.append(lab, inp, lock); b.append(s);
+    viewOnly(b, "TheKeep locks itself after five minutes without use.");
   }],
   background: () => ["Background", current.agent, (b, d) => {
     const l = section(b, "Running and scheduled");
