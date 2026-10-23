@@ -363,8 +363,8 @@ const EyroAPI = {
   async keepSend(inst, name) { return LIVE ? Real.keepSend(inst, name) : (TAB_DATA[inst.id].keep.files.push([name, "Added just now"]), { ok: true }); },
   // POST /api/keep/lock
   async keepLock(inst) { return LIVE ? Real.keepLock(inst) : (TAB_DATA[inst.id].keep.open = false, { ok: true }); },
-  // Wake after a power-return restart: not an Eyro route yet.
-  async wake(inst) { if (LIVE) return { ok: false }; inst.state = "on"; return { ok: true }; },
+  // POST /api/wake {keep}: wake after a power cut, with the held items that continue.
+  async wake(inst, keep) { if (LIVE) return Real.wake(inst, keep); inst.state = "on"; inst.idle = null; return { ok: true }; },
   // Team Meeting: no meeting route. The app sends each message to every member's
   // team chat thread for this meeting; agents' replies arrive on their own and are
   // added to the meeting as they come. Returns any replies it has right away.
@@ -445,6 +445,10 @@ function cardFromCopy(c) {
   const patch = c.patch.split("\n").filter((l) => l && !l.startsWith("+++") && !l.startsWith("---") && !l.startsWith("diff "));
   return { id: c.id, type: "diff", summary: `Changes to ${baseName(c.origin)}`, file: c.origin, patch };
 }
+// GET /api/local/config's idle -> the crash card: each held item, kept or dropped at Wake.
+function cardFromIdle(idle) {
+  return { id: idle.card_id, type: "crash", held: idle.held || [] };
+}
 // GET /api/intake/first-contacts (waiting) -> a contact card.
 function cardFromContact(f) {
   return { id: f.id, type: "contact", sender: f.sender, channel: f.channel, verified: f.verified, preview: f.first_message };
@@ -461,7 +465,9 @@ const Real = {
     const cfg = await call(inst, "GET", "/api/local/config");
     inst.agent = cfg.agent_name || inst.agent;
     inst.locked = cfg.presence && cfg.presence.mode === "lock";
-    inst.state = "on";
+    // Idle after a power cut: what Eyro holds until the owner wakes it.
+    inst.idle = cfg.idle || null;
+    inst.state = inst.idle ? "idle" : "on";
     if (inst.locked) { inst.cards = []; return; }
     const [approvals, copies, contacts] = await Promise.all([
       call(inst, "GET", "/api/pending-confirmations").catch(() => []),
@@ -472,6 +478,7 @@ const Real = {
       ...approvals.map(cardFromApproval),
       ...copies.filter((c) => c.status === "proposed" && c.patch).map(cardFromCopy),
       ...contacts.filter((f) => f.status === "waiting").map(cardFromContact),
+      ...(inst.idle ? [cardFromIdle(inst.idle)] : []),
     ];
     if (!inst.feed && Transport.notifications) {
       inst.feed = Transport.notifications(inst.pairing, (f) => {
@@ -556,6 +563,19 @@ const Real = {
       if (e.status === 403) return { ok: false, error: "Unlocking needs what you log in with. Unlock it at your Eyro." };
       return { ok: false, error: proofError(e) };
     }
+  },
+  // The crash card's wake goes through governance like any card's: done, or
+  // waiting for the owner's OK as an approval card.
+  async wake(inst, keep) {
+    try {
+      const d = await call(inst, "POST", "/api/wake", { keep });
+      const result = (d && d.result) || {};
+      if (result.status === "done") { inst.state = "on"; inst.idle = null; return { ok: true }; }
+      await Real.load(inst);
+      const reason = result.reason || {};
+      if (reason.approval_id || reason.waiting_for_owner || reason.kind === "waiting_for_owner") return { ok: false, error: "Approve the wake in the card that just came in." };
+      return { ok: false, error: "It didn't wake." };
+    } catch (e) { return { ok: false, error: e.message }; }
   },
   async keepUnlock(inst, phrase, pin) {
     try { await call(inst, "POST", "/api/keep/unlock", { admin_phrase: phrase, pin }); return { ok: true }; }
@@ -718,7 +738,7 @@ const EXAMPLE_INSTANCES = [
   {
     id: "scout", agent: "Scout", device: "Garage N95", state: "idle", locked: false,
     thread: [ { who: "sys", text: "Power came back at 4:12 AM. Scout restarted and is idle until you wake it." } ],
-    cards: [],
+    cards: [ { id: "crash-example", type: "crash", held: [ { id: "work-1", kind: "work", label: ex("Reconcile the September invoices") }, { id: "job-1", kind: "job", label: ex("Weekly backup check") } ] } ],
   },
 ];
 // One instance per paired Eyro; the name, lock state and cards come from EyroAPI.load.
@@ -857,7 +877,7 @@ function renderHeader() {
   } else if (current.state === "idle") {
     const d = el("div", "banner idle");
     d.append(el("span", "grow", `${current.agent} restarted after a power cut and is idle.`));
-    const w = el("button", "", "Wake"); w.onclick = async () => { await EyroAPI.wake(current); current.thread.push({ who: "sys", text: `${current.agent} is awake.` }); renderAll(); }; d.append(w); b.append(d);
+    const w = el("button", "", "Wake"); w.onclick = () => openSheet("pending"); d.append(w); b.append(d);
   }
   const blocked = !navigator.onLine || (!meeting.active && (current.locked || current.state === "idle"));
   $("#msg").disabled = blocked;
@@ -889,13 +909,13 @@ function bubble(m, inMeeting) {
 }
 
 /* ---------------- cards ---------------- */
-const CARD_LABEL = { payment: "Transaction card", approval: "Needs your OK", diff: "Sandbox changes", contact: "New contact" };
+const CARD_LABEL = { payment: "Transaction card", approval: "Needs your OK", diff: "Sandbox changes", contact: "New contact", crash: "After a power cut" };
 function renderCard(c) {
   const card = el("div", "card" + (c.resolved ? " done" : ""));
   const head = el("div", "card-head"); head.append(el("span", "kind-dot"), el("span", "", CARD_LABEL[c.type]));
   card.append(head);
   if (c.resolved) { card.append(el("div", "card-title", c.summary || c.sender)); card.append(el("div", "result " + (c.resolved.ok ? "ok" : "no"), c.resolved.text)); return card; }
-  ({ payment: payCard, approval: approvalCard, diff: diffCard, contact: contactCard })[c.type](card, c);
+  ({ payment: payCard, approval: approvalCard, diff: diffCard, contact: contactCard, crash: crashCard })[c.type](card, c);
   return card;
 }
 function rows(card, pairs) {
@@ -954,6 +974,29 @@ function diffCard(card, c) {
   no.onclick = async () => { await EyroAPI.copy(current, c, "discard"); done(c, false, "Discarded. Your file is as it was."); };
   yes.onclick = async () => { await EyroAPI.copy(current, c, "commit"); done(c, true, "Committed to your file."); };
   a.append(no, yes); card.append(a);
+}
+// The crash card: what Eyro held after a power cut. Each item continues or
+// is dropped; Wake wakes Eyro with only the ones kept.
+function crashCard(card, c) {
+  card.append(el("div", "card-title", `${current.agent} restarted after a power cut and is idle`));
+  card.append(el("div", "note", c.held.length ? "Untick anything that shouldn't continue, then wake it." : "Nothing was interrupted."));
+  const picks = [];
+  for (const h of c.held) {
+    const r = el("label", "row"); r.style.cursor = "pointer";
+    const cb = el("input"); cb.type = "checkbox"; cb.checked = true; picks.push([h.id, cb]);
+    r.append(cb, el("span", "v", `${h.kind === "job" ? "Scheduled job" : "In progress"}: ${h.label || h.id}`));
+    card.append(r);
+  }
+  const err = el("div", "err"); card.append(err);
+  const a = el("div", "actions"); const wake = el("button", "btn primary", "Wake");
+  wake.onclick = async () => {
+    const keep = picks.filter(([, cb]) => cb.checked).map(([id]) => id);
+    const r = await EyroAPI.wake(current, keep);
+    if (!r.ok) { err.textContent = r.error; renderAll(); return; }
+    current.thread.push({ who: "sys", text: `${current.agent} is awake.` });
+    done(c, true, keep.length ? `Awake. ${keep.length} item${keep.length === 1 ? "" : "s"} continue.` : "Awake. Nothing was kept.");
+  };
+  a.append(wake); card.append(a);
 }
 function contactCard(card, c) {
   card.append(el("div", "card-title", `New on ${c.channel}: ${c.sender}`));
